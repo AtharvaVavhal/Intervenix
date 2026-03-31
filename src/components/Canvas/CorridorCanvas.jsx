@@ -18,7 +18,6 @@ const BEAM_H = 0.16;
 const DEPTH = RIB_COUNT * RIB_SPACING;
 const CENTER_Y = (FLOOR_Y + CEIL_Y) / 2;
 
-// ─── Noise texture factory ───────────────────────────────────────────────────
 function makeNoiseTexture(w = 256, h = 256, lo = 48, hi = 82, repeatX = 10, repeatY = 10) {
   const canvas = document.createElement("canvas");
   canvas.width = w; canvas.height = h;
@@ -35,7 +34,6 @@ function makeNoiseTexture(w = 256, h = 256, lo = 48, hi = 82, repeatX = 10, repe
   return tex;
 }
 
-// ─── Camera — breathing only, slight offset ───────────────────────────────────
 function CameraController({ mouse }) {
   const { camera } = useThree();
   const clock = useRef(0);
@@ -53,24 +51,16 @@ function CameraController({ mouse }) {
   return null;
 }
 
-// ─── Floor — reflective, imperfect ──────────────────────────────────────────
 function Floor() {
   const roughnessMap = useMemo(() => makeNoiseTexture(512, 512, 18, 52, 14, 14), []);
-
   return (
     <mesh rotation-x={-Math.PI / 2} position={[0, FLOOR_Y, -DEPTH / 2]}>
       <planeGeometry args={[HALF_W * 2 + 2, DEPTH + 14]} />
-      <meshStandardMaterial
-        color="#020208"
-        metalness={0.72}
-        roughness={0.08}
-        roughnessMap={roughnessMap}
-      />
+      <meshStandardMaterial color="#020208" metalness={0.72} roughness={0.08} roughnessMap={roughnessMap} />
     </mesh>
   );
 }
 
-// ─── Ceiling — nearly invisible ──────────────────────────────────────────────
 function Ceiling() {
   return (
     <mesh rotation-x={Math.PI / 2} position={[0, CEIL_Y, -DEPTH / 2]}>
@@ -80,16 +70,9 @@ function Ceiling() {
   );
 }
 
-// ─── Walls — fully matte, recede into dark ───────────────────────────────────
 function Walls() {
   const mat = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: "#020208",
-        metalness: 0.0,
-        roughness: 0.96,
-        side: THREE.DoubleSide,
-      }),
+    () => new THREE.MeshStandardMaterial({ color: "#020208", metalness: 0.0, roughness: 0.96, side: THREE.DoubleSide }),
     []
   );
   const inset = PILLAR_W / 2 + 0.04;
@@ -105,7 +88,6 @@ function Walls() {
   );
 }
 
-// ─── Structural Ribs — catch gradients ───────────────────────────────────────
 function Ribs() {
   const pillarRef = useRef();
   const beamRef   = useRef();
@@ -132,24 +114,11 @@ function Ribs() {
   }, [dummy]);
 
   const structMat = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: "#09090f",
-        metalness: 0.28,
-        roughness: 0.64,
-        emissive: ACCENT_VEC,
-        emissiveIntensity: 0.003,
-      }),
+    () => new THREE.MeshStandardMaterial({ color: "#09090f", metalness: 0.28, roughness: 0.64, emissive: ACCENT_VEC, emissiveIntensity: 0.003 }),
     []
   );
-
   const baseMat = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: "#05050a",
-        metalness: 0.38,
-        roughness: 0.72,
-      }),
+    () => new THREE.MeshStandardMaterial({ color: "#05050a", metalness: 0.38, roughness: 0.72 }),
     []
   );
 
@@ -169,15 +138,9 @@ function Ribs() {
   );
 }
 
-// ─── Edge Strips — barely there ──────────────────────────────────────────────
 function EdgeStrips() {
   const mat = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: "#000000",
-        emissive: ACCENT_VEC,
-        emissiveIntensity: 0.18,
-      }),
+    () => new THREE.MeshStandardMaterial({ color: "#000000", emissive: ACCENT_VEC, emissiveIntensity: 0.18 }),
     []
   );
   const len = DEPTH + 10;
@@ -194,16 +157,13 @@ function EdgeStrips() {
   );
 }
 
-// ─── End Glow — minimal focal accent ─────────────────────────────────────────
 function EndGlow() {
   const ref   = useRef();
   const clock = useRef(0);
-
   useFrame((_, dt) => {
     clock.current += dt;
     ref.current.material.opacity = 0.09 + Math.sin(clock.current * 0.18) * 0.012;
   });
-
   return (
     <mesh ref={ref} position={[0, CENTER_Y, -(DEPTH + 4)]}>
       <planeGeometry args={[HALF_W * 2, CORRIDOR_H]} />
@@ -212,75 +172,46 @@ function EndGlow() {
   );
 }
 
-// ─── Dominant Far Light — sole light source ───────────────────────────────────
 function DominantLight() {
   const ref   = useRef();
   const clock = useRef(0);
-
   useFrame((_, dt) => {
     if (!ref.current) return;
     clock.current += dt;
     ref.current.intensity = 22 + Math.sin(clock.current * 0.14) * 0.44;
   });
-
   return (
-    <pointLight
-      ref={ref}
-      position={[0, CENTER_Y + 0.5, -(DEPTH + 2)]}
-      intensity={22}
-      color={ACCENT}
-      distance={110}
-      decay={1.2}
-    />
+    <pointLight ref={ref} position={[0, CENTER_Y + 0.5, -(DEPTH + 2)]} intensity={22} color={ACCENT} distance={110} decay={1.2} />
   );
 }
 
-// ─── Side Fill — reveals geometry only, no color ────────────────────────────
 function SideFill() {
   return (
-    <pointLight
-      position={[-HALF_W * 0.6, CENTER_Y, -DEPTH * 0.4]}
-      intensity={0.08}
-      color="#0d0d18"
-      distance={22}
-      decay={2}
-    />
+    <pointLight position={[-HALF_W * 0.6, CENTER_Y, -DEPTH * 0.4]} intensity={0.08} color="#0d0d18" distance={22} decay={2} />
   );
 }
 
-// ─── Foreground Silhouettes — frame the composition ──────────────────────────
 function ForegroundSilhouettes() {
   const mat = useMemo(
     () => new THREE.MeshBasicMaterial({ color: "#010108", transparent: true, opacity: 0.92 }),
     []
   );
-
   return (
     <>
-      <mesh position={[-HALF_W - 0.1, CENTER_Y, 3.8]} material={mat}>
-        <boxGeometry args={[0.9, CORRIDOR_H * 1.1, 0.5]} />
-      </mesh>
-      <mesh position={[HALF_W + 0.1, CENTER_Y, 3.8]} material={mat}>
-        <boxGeometry args={[0.9, CORRIDOR_H * 1.1, 0.5]} />
-      </mesh>
-      <mesh position={[0, CEIL_Y + 0.12, 3.6]} material={mat}>
-        <boxGeometry args={[HALF_W * 2 + 2.2, 0.6, 0.5]} />
-      </mesh>
-      <mesh position={[0, FLOOR_Y - 0.1, 3.6]} material={mat}>
-        <boxGeometry args={[HALF_W * 2 + 2.2, 0.5, 0.5]} />
-      </mesh>
+      <mesh position={[-HALF_W - 0.1, CENTER_Y, 3.8]} material={mat}><boxGeometry args={[0.9, CORRIDOR_H * 1.1, 0.5]} /></mesh>
+      <mesh position={[HALF_W + 0.1, CENTER_Y, 3.8]} material={mat}><boxGeometry args={[0.9, CORRIDOR_H * 1.1, 0.5]} /></mesh>
+      <mesh position={[0, CEIL_Y + 0.12, 3.6]} material={mat}><boxGeometry args={[HALF_W * 2 + 2.2, 0.6, 0.5]} /></mesh>
+      <mesh position={[0, FLOOR_Y - 0.1, 3.6]} material={mat}><boxGeometry args={[HALF_W * 2 + 2.2, 0.5, 0.5]} /></mesh>
     </>
   );
 }
 
-// ─── Depth Silhouettes — infinite corridor illusion ───────────────────────────
 function DepthSilhouettes() {
   const frames = [1, 2, 3, 4].map(i => ({
-    z:  -(DEPTH + 4 + i * 5.5),
+    z: -(DEPTH + 4 + i * 5.5),
     sc: 1 - i * 0.06,
     op: Math.max(0.04, 0.32 - i * 0.07),
   }));
-
   return (
     <>
       {frames.map(({ z, sc, op }, i) => (
@@ -307,7 +238,6 @@ function DepthSilhouettes() {
   );
 }
 
-// ─── Main Export ──────────────────────────────────────────────────────────────
 const CA_OFFSET = new THREE.Vector2(0.00012, 0.00012);
 
 export default function CorridorCanvas({ mouseRef }) {
@@ -321,37 +251,23 @@ export default function CorridorCanvas({ mouseRef }) {
         powerPreference: "high-performance",
         toneMapping: THREE.ACESFilmicToneMapping,
       }}
-      onCreated={({ gl }) => {
-        gl.toneMappingExposure = 1.05;
-      }}
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-        zIndex: 0,
-      }}
+      onCreated={({ gl }) => { gl.toneMappingExposure = 1.05; }}
+      style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0 }}
     >
       <fog attach="fog" args={["#01010a", 12, 54]} />
       <color attach="background" args={["#010106"]} />
-
       <CameraController mouse={mouseRef} />
-
       <ambientLight intensity={0.001} />
       <DominantLight />
       <SideFill />
-
       <Floor />
       <Ceiling />
       <Walls />
       <Ribs />
       <EdgeStrips />
-
       <ForegroundSilhouettes />
       <DepthSilhouettes />
       <EndGlow />
-
       <EffectComposer>
         <Bloom luminanceThreshold={0.12} luminanceSmoothing={0.92} intensity={0.46} mipmapBlur />
         <Vignette eskil={false} offset={0.08} darkness={1.55} />

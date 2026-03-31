@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import "./App.css";
 import Hero from "./components/Hero";
 import Nav from "./components/Nav";
@@ -7,48 +7,56 @@ import Button from "./components/UI/Button";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const T = {
-  bg:            "#0a0a0d",
-  surface:       "#0e0e12",
-  surfaceAlt:    "#111116",
-  border:        "rgba(255,255,255,0.05)",
-  borderHov:     "rgba(61,90,254,0.30)",
-  accent:        "#3D5AFE",
-  accentHov:     "#5470ff",
-  accentGlow:    "rgba(61,90,254,0.35)",
-  textPrimary:   "#F0F0F0",
-  textSecondary: "#7a7a88",
-  textTertiary:  "rgba(239,239,239,0.20)",
-  serif: "'Playfair Display', serif",
-  sans:  "'Inter', sans-serif",
-  ease:     "cubic-bezier(0.16, 1, 0.3, 1)",
-  easeSlow: "cubic-bezier(0.4, 0, 0.2, 1)",
+  bg:           "#08080c",
+  surface:      "#0d0d12",
+  surfaceAlt:   "#0f0f15",
+  surfaceHov:   "#121218",
+  border:       "rgba(255,255,255,0.05)",
+  borderHov:    "rgba(61,90,254,0.28)",
+  borderSubtle: "rgba(255,255,255,0.04)",
+  accent:       "#3D5AFE",
+  accentLight:  "rgba(61,90,254,0.12)",
+  accentGlow:   "rgba(61,90,254,0.3)",
+  text:         "#EDEDF0",
+  textSub:      "rgba(237,237,240,0.45)",
+  textMuted:    "rgba(237,237,240,0.22)",
+  textFaint:    "rgba(237,237,240,0.10)",
+  serif:  "'Playfair Display', serif",
+  sans:   "'DM Sans', sans-serif",
+  mono:   "'Fira Code', 'Cascadia Code', 'Courier New', monospace",
+  ease:   "cubic-bezier(0.22, 1, 0.36, 1)",
+  easeIn: "cubic-bezier(0.4, 0, 0.2, 1)",
 };
 
 // ─── Primitives ───────────────────────────────────────────────────────────────
 const Label = ({ children }) => (
   <div style={{
-    fontFamily: T.sans, fontSize: "0.60rem", fontWeight: 500,
-    letterSpacing: "0.22em", textTransform: "uppercase",
-    color: T.textTertiary, marginBottom: "1.25rem",
-  }}>{children}</div>
+    fontFamily: T.sans, fontSize: "0.62rem", fontWeight: 500,
+    letterSpacing: "0.18em", textTransform: "uppercase",
+    color: T.textMuted, marginBottom: "1rem",
+  }}>
+    {children}
+  </div>
 );
 
-const SectionTitle = ({ children }) => (
+const SectionTitle = ({ children, center = false }) => (
   <h2 style={{
     fontFamily: T.serif,
-    fontSize: "clamp(1.85rem, 3.6vw, 2.75rem)",
+    fontSize: "clamp(1.9rem, 3.5vw, 2.8rem)",
     fontWeight: 700,
-    color: T.textPrimary,
-    lineHeight: 1.08,
-    letterSpacing: "-0.02em",
-    margin: "0 0 1.5rem",
+    color: T.text,
+    lineHeight: 1.1,
+    letterSpacing: "-0.025em",
+    margin: "0 0 1.25rem",
+    textAlign: center ? "center" : "left",
   }}>{children}</h2>
 );
 
-const Body = ({ children, style = {} }) => (
+const Body = ({ children, style = {}, center = false }) => (
   <p style={{
-    fontFamily: T.sans, fontSize: "0.91rem", fontWeight: 400,
-    color: T.textSecondary, lineHeight: 1.82, maxWidth: "520px",
+    fontFamily: T.sans, fontSize: "0.92rem", fontWeight: 300,
+    color: T.textSub, lineHeight: 1.82,
+    textAlign: center ? "center" : "left",
     ...style,
   }}>{children}</p>
 );
@@ -56,61 +64,55 @@ const Body = ({ children, style = {} }) => (
 const Divider = () => (
   <div style={{
     width: "100%", height: "1px",
-    background: `linear-gradient(90deg, transparent, ${T.border}, transparent)`,
+    background: `linear-gradient(90deg, transparent 0%, ${T.border} 30%, ${T.border} 70%, transparent 100%)`,
   }} />
 );
 
-const Section = ({ children, alt = false, style = {} }) => (
-  <section style={{
-    background: alt ? T.surfaceAlt : "transparent",
-    padding: "8rem 2rem",
-    ...style,
-  }}>
-    <div style={{ maxWidth: "1040px", margin: "0 auto" }}>
+const Section = ({ children, alt = false, style: extra = {} }) => (
+  <section style={{ background: alt ? T.surfaceAlt : T.bg, padding: "7rem 2rem", ...extra }}>
+    <div style={{ maxWidth: "1080px", margin: "0 auto" }}>
       {children}
     </div>
   </section>
 );
 
-// ─── Film Grain ───────────────────────────────────────────────────────────────
-const GrainOverlay = () => (
+// ─── Grain overlay ────────────────────────────────────────────────────────────
+const Grain = () => (
   <div style={{
-    position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
-    pointerEvents: "none", zIndex: 9999, opacity: 0.025,
-    mixBlendMode: "overlay",
-    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-    backgroundRepeat: "repeat",
-    backgroundSize: "128px 128px",
+    position: "fixed", inset: 0, zIndex: 9999,
+    pointerEvents: "none", opacity: 0.022, mixBlendMode: "overlay",
+    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+    backgroundSize: "160px 160px",
   }} />
 );
 
 // ─── Problem ──────────────────────────────────────────────────────────────────
-const stats = [
-  { value: "340 ms", label: "average fraud decision window" },
-  { value: "$4.7T",  label: "lost annually to financial crime" },
-  { value: "67%",    label: "alerts still handled manually" },
+const STATS = [
+  { value: "340ms",  label: "Average fraud decision window" },
+  { value: "$4.7T",  label: "Lost annually to financial crime" },
+  { value: "67%",    label: "Alerts still handled manually" },
 ];
 
 const Problem = () => (
   <Section>
-    <Reveal>
-      <Label>The Problem</Label>
-      <SectionTitle>
-        Systems that react<br />
-        <em style={{ fontStyle: "italic", color: T.textTertiary }}>after the damage is done.</em>
-      </SectionTitle>
-      <Body style={{ marginBottom: "4rem" }}>
-        Legacy risk engines flag anomalies in batches, escalate through silos, and arrive at decisions minutes too late. The window for intelligent intervention has already closed.
-      </Body>
-    </Reveal>
+    <div style={{ maxWidth: "620px", marginBottom: "4.5rem" }}>
+      <Reveal>
+        <Label>The Problem</Label>
+        <SectionTitle>
+          Systems that react<br />
+          <em style={{ fontStyle: "italic", color: T.textMuted }}>after the damage is done.</em>
+        </SectionTitle>
+        <Body>
+          Legacy risk engines flag anomalies in batches, escalate through silos, and arrive at decisions minutes too late. The window for intelligent intervention has already closed.
+        </Body>
+      </Reveal>
+    </div>
 
     <Reveal delay={0.1}>
-      <div style={{ borderTop: `1px solid ${T.border}` }}>
-        <div className="stats-grid">
-          {stats.map(({ value, label }, i) => (
-            <StatCell key={value} value={value} label={label} i={i} last={i === stats.length - 1} />
-          ))}
-        </div>
+      <div className="stats-grid">
+        {STATS.map(({ value, label }, i) => (
+          <StatCell key={value} value={value} label={label} i={i} last={i === STATS.length - 1} />
+        ))}
       </div>
     </Reveal>
   </Section>
@@ -124,24 +126,27 @@ const StatCell = ({ value, label, i, last }) => {
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        padding: "2.5rem 0",
-        paddingRight: !last ? "3rem" : "0",
-        paddingLeft: i > 0 ? "3rem" : "0",
+        padding: "2.75rem 2.5rem 2.75rem 0",
+        paddingLeft: i > 0 ? "2.5rem" : "0",
         borderRight: !last ? `1px solid ${T.border}` : "none",
-        transition: `background 0.3s ${T.easeSlow}`,
+        transition: "all 0.25s ease",
+        cursor: "default",
       }}
     >
       <div style={{
         fontFamily: T.serif,
-        fontSize: "clamp(2rem, 4vw, 2.9rem)",
-        fontWeight: 700, color: T.textPrimary, lineHeight: 1,
-        letterSpacing: "-0.02em", marginBottom: "0.65rem",
-        transition: `text-shadow 0.3s ${T.easeSlow}`,
-        textShadow: hov ? `0 0 32px ${T.accentGlow}` : "none",
+        fontSize: "clamp(2.2rem, 4vw, 3.2rem)",
+        fontWeight: 700,
+        color: T.text,
+        lineHeight: 1,
+        letterSpacing: "-0.03em",
+        marginBottom: "0.6rem",
+        transition: "text-shadow 0.3s ease",
+        textShadow: hov ? `0 0 40px ${T.accentGlow}` : "none",
       }}>{value}</div>
       <div style={{
-        fontFamily: T.sans, fontSize: "0.76rem", fontWeight: 400,
-        color: T.textSecondary, lineHeight: 1.5, letterSpacing: "0.01em",
+        fontFamily: T.sans, fontSize: "0.78rem",
+        fontWeight: 400, color: T.textSub, lineHeight: 1.5,
       }}>{label}</div>
     </div>
   );
@@ -150,32 +155,86 @@ const StatCell = ({ value, label, i, last }) => {
 // ─── Solution ─────────────────────────────────────────────────────────────────
 const Solution = () => (
   <Section alt>
-    <Reveal>
-      <Label>The Solution</Label>
-      <SectionTitle>Decision intelligence<br />that moves at machine speed.</SectionTitle>
-      <Body style={{ maxWidth: "580px" }}>
-        Intervenix embeds a live decision graph across your transaction layer — scoring, routing, and acting on risk signals before they compound. Not a dashboard. An autonomous intervention engine.
-      </Body>
-    </Reveal>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6rem", alignItems: "center" }}>
+      <Reveal>
+        <Label>The Solution</Label>
+        <SectionTitle>Decision intelligence that moves at machine speed.</SectionTitle>
+        <Body style={{ marginBottom: "2rem" }}>
+          Intervenix embeds a live decision graph across your transaction layer — scoring, routing, and acting on risk signals before they compound. Not a dashboard. An autonomous intervention engine.
+        </Body>
+        <Button T={T} primary>See the Architecture →</Button>
+      </Reveal>
+      <Reveal delay={0.12}>
+        <ArchDiagram />
+      </Reveal>
+    </div>
   </Section>
 );
 
+// Mini architecture diagram
+const ArchDiagram = () => (
+  <div style={{
+    background: T.surface,
+    border: `1px solid ${T.border}`,
+    borderRadius: "8px",
+    padding: "2rem",
+    fontFamily: T.mono,
+    fontSize: "0.74rem",
+    lineHeight: 2,
+    color: T.textSub,
+  }}>
+    {[
+      { label: "Transaction Stream", color: "#4ade80", icon: "▶" },
+      { label: "Behavioral Engine",  color: "#60a5fa", icon: "◈" },
+      { label: "Risk Graph",         color: T.accent,  icon: "⬡" },
+      { label: "Decision Layer",     color: "#fbbf24", icon: "◆" },
+      { label: "Audit Trail",        color: "#a78bfa", icon: "■" },
+    ].map(({ label, color, icon }, i) => (
+      <div key={label} style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+        {i > 0 && (
+          <div style={{
+            marginLeft: "0.2rem",
+            width: "1px", height: "16px",
+            background: T.border,
+            marginBottom: "-14px",
+            marginTop: "-2px",
+          }} />
+        )}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", width: "100%" }}>
+          <span style={{ color, fontSize: "0.65rem", width: "12px", textAlign: "center" }}>{icon}</span>
+          <span style={{ color: T.text, flex: 1 }}>{label}</span>
+          <span style={{
+            fontSize: "0.60rem", fontFamily: T.sans, letterSpacing: "0.08em",
+            color: i === 3 ? "#fbbf24" : T.textMuted,
+            background: i === 3 ? "rgba(251,191,36,0.08)" : "transparent",
+            padding: i === 3 ? "0.15rem 0.4rem" : "0",
+            borderRadius: "3px",
+            border: i === 3 ? "1px solid rgba(251,191,36,0.2)" : "none",
+          }}>{i === 3 ? "ACTIVE" : i < 3 ? "→" : "←"}</span>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
 // ─── How It Works ─────────────────────────────────────────────────────────────
-const steps = [
-  { n: "01", title: "Ingest",    body: "Connect via REST or stream. Intervenix ingests transactions, behavioral events, and contextual signals in real time." },
-  { n: "02", title: "Score",     body: "Multi-model ensemble scoring across fraud, credit, and compliance — simultaneously, in under 50ms." },
-  { n: "03", title: "Intervene", body: "Trigger automated actions: block, flag, reroute, or escalate — with a full audit trail and explainability." },
+const STEPS = [
+  { n: "01", title: "Ingest",    body: "Connect via REST or stream. Intervenix ingests transactions, behavioral events, and contextual signals in real time.", tag: "< 2ms" },
+  { n: "02", title: "Score",     body: "Multi-model ensemble scoring across fraud, credit, and compliance — simultaneously, in under 50ms.", tag: "< 50ms" },
+  { n: "03", title: "Intervene", body: "Trigger automated actions: block, flag, reroute, or escalate — with a full audit trail and explainability.", tag: "Automated" },
 ];
 
 const HowItWorks = () => (
   <Section>
     <Reveal>
-      <Label>How It Works</Label>
-      <SectionTitle>Three layers.<br />One intervention.</SectionTitle>
+      <div style={{ textAlign: "center", maxWidth: "520px", margin: "0 auto 0" }}>
+        <Label>How It Works</Label>
+        <SectionTitle center>Three layers. One intervention.</SectionTitle>
+      </div>
     </Reveal>
-    <div className="steps-grid">
-      {steps.map((s, i) => (
-        <Reveal key={s.n} delay={i * 0.08}>
+    <div className="steps-grid" style={{ background: T.border }}>
+      {STEPS.map((s, i) => (
+        <Reveal key={s.n} delay={i * 0.07}>
           <StepCard {...s} />
         </Reveal>
       ))}
@@ -183,59 +242,87 @@ const HowItWorks = () => (
   </Section>
 );
 
-const StepCard = ({ n, title, body }) => {
+const StepCard = ({ n, title, body, tag }) => {
   const [hov, setHov] = useState(false);
   return (
     <div
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        background: T.surfaceAlt,
-        border: `1px solid ${hov ? T.borderHov : T.border}`,
-        borderRadius: "4px", padding: "2rem",
-        transition: `border-color 0.3s ${T.easeSlow}, transform 0.35s ${T.ease}, box-shadow 0.3s ${T.easeSlow}`,
-        transform: hov ? "translateY(-4px)" : "translateY(0)",
-        boxShadow: hov ? `0 8px 40px rgba(61,90,254,0.07)` : "none",
+        background: hov ? T.surfaceHov : T.surfaceAlt,
+        padding: "2.5rem 2rem",
+        transition: `background 0.2s ${T.easeIn}`,
+        cursor: "default",
         height: "100%",
+        position: "relative",
+        overflow: "hidden",
       }}
     >
+      {/* Accent top border on hover */}
       <div style={{
-        fontFamily: T.serif, fontSize: "1.65rem", fontWeight: 700,
-        color: hov ? "rgba(61,90,254,0.38)" : "rgba(61,90,254,0.14)",
-        marginBottom: "1.5rem", lineHeight: 1,
-        transition: `color 0.3s ${T.easeSlow}`,
-      }}>{n}</div>
+        position: "absolute", top: 0, left: 0, right: 0, height: "1px",
+        background: hov ? `linear-gradient(90deg, transparent, ${T.accent}, transparent)` : "transparent",
+        transition: `background 0.3s ${T.easeIn}`,
+      }} />
+
       <div style={{
-        fontFamily: T.sans, fontSize: "0.87rem", fontWeight: 600,
-        color: T.textPrimary, marginBottom: "0.75rem", letterSpacing: "0.01em",
+        display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "2rem",
+      }}>
+        <span style={{
+          fontFamily: T.serif, fontSize: "1.5rem", fontWeight: 700,
+          color: hov ? "rgba(61,90,254,0.5)" : "rgba(61,90,254,0.18)",
+          lineHeight: 1,
+          transition: `color 0.25s ${T.easeIn}`,
+        }}>{n}</span>
+        <span style={{
+          fontFamily: T.sans, fontSize: "0.62rem", fontWeight: 500,
+          letterSpacing: "0.08em",
+          color: T.accent,
+          background: T.accentLight,
+          border: `1px solid rgba(61,90,254,0.18)`,
+          padding: "0.2rem 0.55rem",
+          borderRadius: "3px",
+        }}>{tag}</span>
+      </div>
+
+      <div style={{
+        fontFamily: T.sans, fontSize: "0.88rem", fontWeight: 500,
+        color: T.text, marginBottom: "0.75rem", letterSpacing: "0.005em",
       }}>{title}</div>
       <div style={{
-        fontFamily: T.sans, fontSize: "0.83rem", fontWeight: 400,
-        color: T.textSecondary, lineHeight: 1.78,
+        fontFamily: T.sans, fontSize: "0.82rem", fontWeight: 300,
+        color: T.textSub, lineHeight: 1.78,
       }}>{body}</div>
     </div>
   );
 };
 
 // ─── Features ─────────────────────────────────────────────────────────────────
-const features = [
-  { title: "Adaptive Risk Graph",  body: "Dynamic entity relationships that evolve with each signal." },
-  { title: "Sub-50ms Latency",     body: "Scoring pipelines that keep pace with transaction velocity." },
-  { title: "Explainable AI",       body: "Every decision ships with a human-readable rationale." },
-  { title: "Compliance Layer",     body: "Built-in alignment for AML, KYC, and PSD2 regulations." },
-  { title: "Behavioral Signals",   body: "Device, session, and interaction patterns in every score." },
-  { title: "Custom Thresholds",    body: "Tunable per segment, geography, and product line." },
+const FEATURES = [
+  { title: "Adaptive Risk Graph",  body: "Dynamic entity relationships that evolve with each signal.", icon: "⬡" },
+  { title: "Sub-50ms Latency",     body: "Scoring pipelines that keep pace with transaction velocity.", icon: "◈" },
+  { title: "Explainable AI",       body: "Every decision ships with a human-readable rationale.", icon: "◎" },
+  { title: "Compliance Layer",     body: "Built-in alignment for AML, KYC, and PSD2 regulations.", icon: "■" },
+  { title: "Behavioral Signals",   body: "Device, session, and interaction patterns in every score.", icon: "◆" },
+  { title: "Custom Thresholds",    body: "Tunable per segment, geography, and product line.", icon: "▲" },
 ];
 
 const Features = () => (
   <Section alt>
     <Reveal>
-      <Label>Capabilities</Label>
-      <SectionTitle>Built for the edge<br />of every transaction.</SectionTitle>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "0" }}>
+        <div>
+          <Label>Capabilities</Label>
+          <SectionTitle>Built for the edge<br />of every transaction.</SectionTitle>
+        </div>
+        <div style={{ paddingBottom: "1.5rem" }}>
+          <Button T={T}>View all features →</Button>
+        </div>
+      </div>
     </Reveal>
-    <Reveal delay={0.1}>
+    <Reveal delay={0.08}>
       <div className="features-grid">
-        {features.map((f) => (
+        {FEATURES.map((f) => (
           <FeatureCard key={f.title} {...f} />
         ))}
       </div>
@@ -243,45 +330,68 @@ const Features = () => (
   </Section>
 );
 
-const FeatureCard = ({ title, body }) => {
+const FeatureCard = ({ title, body, icon }) => {
   const [hov, setHov] = useState(false);
   return (
     <div
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        padding: "2rem",
-        background: hov ? "rgba(61,90,254,0.04)" : T.surfaceAlt,
-        transition: `background 0.25s ${T.easeSlow}`,
+        padding: "1.75rem",
+        background: hov ? "rgba(61,90,254,0.035)" : T.surfaceAlt,
+        transition: `background 0.2s ${T.easeIn}`,
         cursor: "default",
+        position: "relative",
       }}
     >
       <div style={{
-        width: "4px", height: "4px", borderRadius: "50%",
-        background: T.accent, marginBottom: "1.25rem",
-        opacity: hov ? 1 : 0.35,
-        boxShadow: hov ? `0 0 10px ${T.accentGlow}` : "none",
-        transition: `opacity 0.25s ${T.easeSlow}, box-shadow 0.25s ${T.easeSlow}`,
-      }} />
+        fontSize: "0.82rem",
+        color: hov ? T.accent : T.textMuted,
+        marginBottom: "1.1rem",
+        transition: `color 0.2s ease`,
+      }}>{icon}</div>
       <div style={{
-        fontFamily: T.sans, fontSize: "0.84rem", fontWeight: 600,
-        color: T.textPrimary, marginBottom: "0.6rem", letterSpacing: "0.01em",
+        fontFamily: T.sans, fontSize: "0.84rem", fontWeight: 500,
+        color: T.text, marginBottom: "0.5rem",
       }}>{title}</div>
       <div style={{
-        fontFamily: T.sans, fontSize: "0.81rem", fontWeight: 400,
-        color: T.textSecondary, lineHeight: 1.74,
+        fontFamily: T.sans, fontSize: "0.80rem", fontWeight: 300,
+        color: T.textSub, lineHeight: 1.72,
       }}>{body}</div>
     </div>
   );
 };
 
-// ─── Output / API Card ────────────────────────────────────────────────────────
-const Ln  = ({ children, indent }) => <div style={{ paddingLeft: indent ? "1.25rem" : 0 }}>{children}</div>;
-const K   = ({ children }) => <span style={{ color: "#6B8EFF" }}>{children}</span>;
-const N   = ({ children }) => <span style={{ color: "#4ade80" }}>{children}</span>;
-const Str = ({ children, c }) => <span style={{ color: c }}>{children}</span>;
-const Punc = ({ children }) => <span style={{ color: T.textPrimary, opacity: 0.4 }}>{children}</span>;
-const Mu  = ({ children }) => <span style={{ color: T.textSecondary }}>{children}</span>;
+// ─── Output / API ─────────────────────────────────────────────────────────────
+const Output = () => (
+  <Section>
+    <div className="output-grid">
+      <Reveal>
+        <Label>Output</Label>
+        <SectionTitle>Every decision,<br />fully auditable.</SectionTitle>
+        <Body style={{ marginBottom: "2rem" }}>
+          Every scoring event returns a structured payload — risk score, contributing factors, recommended action, and an audit-ready trace. Plug into any downstream system in minutes.
+        </Body>
+        <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+          {["REST API", "Webhooks", "Kafka", "gRPC"].map(tag => (
+            <span key={tag} style={{
+              fontFamily: T.sans, fontSize: "0.70rem", fontWeight: 500,
+              letterSpacing: "0.06em",
+              color: T.textSub,
+              background: T.surface,
+              border: `1px solid ${T.border}`,
+              padding: "0.3rem 0.7rem",
+              borderRadius: "4px",
+            }}>{tag}</span>
+          ))}
+        </div>
+      </Reveal>
+      <Reveal delay={0.1}>
+        <APICard />
+      </Reveal>
+    </div>
+  </Section>
+);
 
 const APICard = () => {
   const [hov, setHov] = useState(false);
@@ -290,108 +400,221 @@ const APICard = () => {
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        background: T.surfaceAlt,
+        background: T.surface,
         border: `1px solid ${hov ? T.borderHov : T.border}`,
-        borderRadius: "4px", overflow: "hidden",
-        fontFamily: "'Fira Code', 'Cascadia Code', 'Courier New', monospace",
-        fontSize: "0.78rem", lineHeight: 1.9,
-        transition: `border-color 0.3s ${T.easeSlow}, box-shadow 0.3s ${T.easeSlow}`,
-        boxShadow: hov ? `0 0 60px rgba(61,90,254,0.06)` : "none",
+        borderRadius: "8px",
+        overflow: "hidden",
+        fontFamily: T.mono,
+        fontSize: "0.76rem",
+        lineHeight: 1.95,
+        transition: `border-color 0.25s ease, box-shadow 0.25s ease`,
+        boxShadow: hov ? `0 0 0 1px rgba(61,90,254,0.1), 0 8px 40px rgba(0,0,0,0.5)` : `0 4px 24px rgba(0,0,0,0.3)`,
       }}
     >
-      {/* Terminal title bar */}
+      {/* Title bar */}
       <div style={{
-        background: "rgba(255,255,255,0.02)",
-        padding: "0.7rem 1.25rem",
+        background: "rgba(255,255,255,0.025)",
+        padding: "0.65rem 1.25rem",
         borderBottom: `1px solid ${T.border}`,
-        display: "flex", alignItems: "center", gap: "0.5rem",
+        display: "flex", alignItems: "center", gap: "0.4rem",
       }}>
         {["#FF5F57", "#FEBC2E", "#28C840"].map(c => (
-          <div key={c} style={{ width: "8px", height: "8px", borderRadius: "50%", background: c, opacity: 0.65 }} />
+          <div key={c} style={{ width: "9px", height: "9px", borderRadius: "50%", background: c, opacity: 0.7 }} />
         ))}
         <span style={{
-          color: T.textSecondary, marginLeft: "0.75rem",
-          fontSize: "0.67rem", letterSpacing: "0.04em",
+          fontFamily: T.sans, color: T.textSub,
+          marginLeft: "0.75rem", fontSize: "0.67rem",
+          letterSpacing: "0.04em",
         }}>
-          POST /v1/score → 200 OK
+          POST /v1/score  ·  200 OK  ·  38ms
         </span>
       </div>
-      {/* JSON body */}
-      <div style={{ padding: "1.5rem 1.75rem" }}>
-        <Ln><Mu>{"{"}</Mu></Ln>
-        <Ln indent><K>"risk_score"</K><Punc>: </Punc><N>94.7</N><Punc>,</Punc></Ln>
-        <Ln indent><K>"decision"</K><Punc>: </Punc><Str c="#fbbf24">"BLOCK"</Str><Punc>,</Punc></Ln>
-        <Ln indent><K>"latency_ms"</K><Punc>: </Punc><N>38</N><Punc>,</Punc></Ln>
-        <Ln indent><K>"factors"</K><Punc>: [</Punc><Str c="#f87171">"velocity_breach"</Str><Punc>, </Punc><Str c="#f87171">"geo_mismatch"</Str><Punc>],</Punc></Ln>
-        <Ln indent><K>"audit_id"</K><Punc>: </Punc><Str c="#a78bfa">"ivx_8f3k92"</Str></Ln>
-        <Ln><Mu>{"}"}</Mu></Ln>
+
+      {/* JSON */}
+      <div style={{ padding: "1.4rem 1.6rem" }}>
+        <div><span style={{ color: T.textSub }}>{"{"}</span></div>
+        <Line k="risk_score"  v={<><Num>94.7</Num>,</>} />
+        <Line k="decision"    v={<><Str color="#fbbf24">"BLOCK"</Str>,</>} />
+        <Line k="latency_ms"  v={<><Num>38</Num>,</>} />
+        <Line k="confidence"  v={<><Num>0.97</Num>,</>} />
+        <Line k="factors"     v={<><Punc>[</Punc><Str color="#f87171">"velocity_breach"</Str><Punc>, </Punc><Str color="#f87171">"geo_mismatch"</Str><Punc>],</Punc></>} />
+        <Line k="model_ver"   v={<><Str color="#86efac">"ivx-v2.4.1"</Str>,</>} />
+        <Line k="audit_id"    v={<><Str color="#a78bfa">"ivx_8f3k92m"</Str></>} />
+        <div><span style={{ color: T.textSub }}>{"}"}</span></div>
       </div>
     </div>
   );
 };
 
-const Output = () => (
-  <Section>
-    <div className="output-grid">
-      <Reveal>
-        <div>
-          <Label>Output</Label>
-          <SectionTitle>Every decision,<br />fully auditable.</SectionTitle>
-        </div>
-        <Body>
-          Every scoring event returns a structured payload — risk score, contributing factors, recommended action, and an audit-ready trace. Plug into any downstream system in minutes.
-        </Body>
-      </Reveal>
-      <Reveal delay={0.12}>
-        <APICard />
-      </Reveal>
+const Line = ({ k, v }) => (
+  <div style={{ paddingLeft: "1.25rem", display: "flex", gap: "0" }}>
+    <span style={{ color: "#7aa2ff" }}>"{k}"</span>
+    <span style={{ color: T.textMuted, opacity: 0.5 }}>: </span>
+    {v}
+  </div>
+);
+const Num  = ({ children }) => <span style={{ color: "#4ade80" }}>{children}</span>;
+const Str  = ({ children, color }) => <span style={{ color }}>{children}</span>;
+const Punc = ({ children }) => <span style={{ color: T.textMuted, opacity: 0.5 }}>{children}</span>;
+
+// ─── Logos / Social proof ─────────────────────────────────────────────────────
+const LogoBar = () => (
+  <section style={{ background: T.bg, padding: "4rem 2rem", borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}` }}>
+    <div style={{ maxWidth: "1080px", margin: "0 auto", textAlign: "center" }}>
+      <p style={{
+        fontFamily: T.sans, fontSize: "0.68rem", fontWeight: 500,
+        letterSpacing: "0.14em", textTransform: "uppercase",
+        color: T.textMuted, marginBottom: "2.5rem",
+      }}>
+        Trusted by risk teams at
+      </p>
+      <div style={{
+        display: "flex", justifyContent: "center", alignItems: "center",
+        gap: "3.5rem", flexWrap: "wrap",
+      }}>
+        {["Polygon", "FinAxis", "Meridian", "Crestview", "Archway"].map(name => (
+          <span key={name} style={{
+            fontFamily: T.serif, fontSize: "1.05rem",
+            color: T.textMuted, letterSpacing: "-0.01em",
+            opacity: 0.5,
+          }}>{name}</span>
+        ))}
+      </div>
     </div>
-  </Section>
+  </section>
 );
 
-// ─── Final CTA ────────────────────────────────────────────────────────────────
-const FinalCTA = () => (
+// ─── CTA ─────────────────────────────────────────────────────────────────────
+const CTA = () => (
   <section style={{
     position: "relative", overflow: "hidden",
-    padding: "10rem 2rem",
-    background: T.bg, textAlign: "center",
+    padding: "10rem 2rem", background: T.bg, textAlign: "center",
   }}>
+    {/* Glow */}
     <div style={{
       position: "absolute", top: "50%", left: "50%",
       transform: "translate(-50%, -50%)",
-      width: "600px", height: "340px",
-      background: "radial-gradient(ellipse at center, rgba(61,90,254,0.07) 0%, transparent 70%)",
-      filter: "blur(60px)", pointerEvents: "none",
+      width: "700px", height: "400px", pointerEvents: "none",
+      background: "radial-gradient(ellipse at center, rgba(61,90,254,0.07) 0%, transparent 65%)",
+      filter: "blur(60px)",
     }} />
-    <div style={{ position: "relative", zIndex: 1, maxWidth: "520px", margin: "0 auto" }}>
+    <div style={{
+      position: "absolute", top: "50%", left: "50%",
+      transform: "translate(-50%, -50%)",
+      width: "300px", height: "200px", pointerEvents: "none",
+      background: "radial-gradient(ellipse at center, rgba(61,90,254,0.05) 0%, transparent 70%)",
+      filter: "blur(30px)",
+    }} />
+
+    {/* Horizontal rule lines */}
+    <div style={{
+      position: "absolute", top: "50%", left: "5%", right: "5%", height: "1px",
+      background: `linear-gradient(90deg, transparent, ${T.border} 20%, ${T.border} 80%, transparent)`,
+      transform: "translateY(-80px)", pointerEvents: "none",
+    }} />
+
+    <div style={{ position: "relative", zIndex: 1, maxWidth: "540px", margin: "0 auto" }}>
       <Reveal>
+        <p style={{
+          fontFamily: T.sans, fontSize: "0.62rem", fontWeight: 500,
+          letterSpacing: "0.18em", textTransform: "uppercase",
+          color: T.textMuted, marginBottom: "1.5rem",
+        }}>Get Started</p>
         <h2 style={{
           fontFamily: T.serif,
-          fontSize: "clamp(2rem, 5vw, 3.4rem)",
-          fontWeight: 700, color: T.textPrimary,
-          lineHeight: 1.08, letterSpacing: "-0.025em",
-          marginBottom: "1.5rem",
+          fontSize: "clamp(2.1rem, 5vw, 3.6rem)",
+          fontWeight: 700, color: T.text,
+          lineHeight: 1.06, letterSpacing: "-0.025em",
+          marginBottom: "1.25rem",
         }}>
           The intervention starts<br />
-          <em style={{ fontStyle: "italic", color: T.textTertiary }}>when you choose to act.</em>
+          <em style={{ fontStyle: "italic", color: T.textMuted }}>when you choose to act.</em>
         </h2>
-        <p style={{
-          fontFamily: T.sans, fontSize: "0.91rem",
-          color: T.textSecondary, lineHeight: 1.8,
-          marginBottom: "2.75rem",
-        }}>
+        <Body center style={{ marginBottom: "2.75rem" }}>
           Join institutions already running Intervenix across their risk stack.
-        </p>
-        <div className="cta-buttons">
+        </Body>
+        <div className="cta-row" style={{ justifyContent: "center" }}>
           <Button T={T} primary>Request Early Access</Button>
           <Button T={T}>Talk to an Engineer</Button>
         </div>
+        <p style={{
+          fontFamily: T.sans, fontSize: "0.70rem",
+          color: T.textMuted, marginTop: "1.5rem",
+        }}>
+          No commitment. Response within 24 hours.
+        </p>
       </Reveal>
     </div>
   </section>
 );
 
 // ─── Footer ───────────────────────────────────────────────────────────────────
+const Footer = () => {
+  const cols = [
+    { head: "Product",  links: ["Overview", "How It Works", "Security", "Changelog"] },
+    { head: "Company",  links: ["About", "Blog", "Careers", "Press"] },
+    { head: "Legal",    links: ["Privacy", "Terms", "DPA", "Compliance"] },
+  ];
+  return (
+    <footer style={{
+      background: T.bg, borderTop: `1px solid ${T.border}`,
+      padding: "4rem 2rem 2rem",
+    }}>
+      <div style={{ maxWidth: "1080px", margin: "0 auto" }}>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "2fr 1fr 1fr 1fr",
+          gap: "3rem",
+          marginBottom: "3.5rem",
+        }}>
+          {/* Brand col */}
+          <div>
+            <span style={{
+              fontFamily: T.serif, fontSize: "1rem",
+              fontWeight: 700, color: T.text,
+              display: "block", marginBottom: "0.75rem",
+            }}>Intervenix</span>
+            <p style={{
+              fontFamily: T.sans, fontSize: "0.78rem", fontWeight: 300,
+              color: T.textSub, lineHeight: 1.7, maxWidth: "240px",
+            }}>
+              Real-time autonomous risk intervention for financial institutions.
+            </p>
+          </div>
+
+          {/* Link cols */}
+          {cols.map(({ head, links }) => (
+            <div key={head}>
+              <p style={{
+                fontFamily: T.sans, fontSize: "0.68rem", fontWeight: 500,
+                letterSpacing: "0.1em", textTransform: "uppercase",
+                color: T.textMuted, marginBottom: "1rem",
+              }}>{head}</p>
+              {links.map(l => (
+                <FooterLink key={l}>{l}</FooterLink>
+              ))}
+            </div>
+          ))}
+        </div>
+
+        <div style={{
+          borderTop: `1px solid ${T.border}`,
+          paddingTop: "1.5rem",
+          display: "flex", justifyContent: "space-between",
+          alignItems: "center", flexWrap: "wrap", gap: "0.75rem",
+        }}>
+          <span style={{ fontFamily: T.sans, fontSize: "0.70rem", color: T.textMuted }}>
+            © 2026 Intervenix. An academic project of Vishwakarma Institute of Technology.
+          </span>
+          <span style={{ fontFamily: T.sans, fontSize: "0.70rem", color: T.textMuted }}>
+            SOC 2 · ISO 27001 · GDPR
+          </span>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
 const FooterLink = ({ children }) => {
   const [hov, setHov] = useState(false);
   return (
@@ -400,46 +623,21 @@ const FooterLink = ({ children }) => {
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        fontFamily: T.sans, fontSize: "0.71rem",
-        color: hov ? T.textPrimary : T.textSecondary,
-        textDecoration: "none",
-        transition: `color 0.18s ${T.easeSlow}`,
-        letterSpacing: "0.02em",
+        display: "block",
+        fontFamily: T.sans, fontSize: "0.78rem", fontWeight: 300,
+        color: hov ? T.text : T.textSub,
+        marginBottom: "0.6rem",
+        transition: "color 0.15s ease",
       }}
-    >
-      {children}
-    </a>
+    >{children}</a>
   );
 };
-
-const Footer = () => (
-  <footer style={{
-    background: T.bg,
-    borderTop: `1px solid ${T.border}`,
-    padding: "2rem 2.5rem",
-    display: "flex", justifyContent: "space-between",
-    alignItems: "center", flexWrap: "wrap", gap: "1rem",
-  }}>
-    <span style={{ fontFamily: T.serif, fontSize: "0.95rem", color: T.textPrimary }}>
-      Intervenix
-    </span>
-    <span style={{
-      fontFamily: T.sans, fontSize: "0.70rem",
-      color: T.textSecondary, letterSpacing: "0.02em",
-    }}>
-      © 2026 Intervenix. All rights reserved. An academic project of Vishwakarma Institute of Technology.
-    </span>
-    <div style={{ display: "flex", gap: "2rem" }}>
-      {["Privacy", "Terms", "Security"].map(l => <FooterLink key={l}>{l}</FooterLink>)}
-    </div>
-  </footer>
-);
 
 // ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
   return (
     <>
-      <GrainOverlay />
+      <Grain />
       <Nav T={T} />
       <Hero T={T} />
       <Divider />
@@ -452,8 +650,8 @@ export default function App() {
       <Features />
       <Divider />
       <Output />
-      <Divider />
-      <FinalCTA />
+      <LogoBar />
+      <CTA />
       <Footer />
     </>
   );
