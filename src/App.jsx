@@ -155,7 +155,7 @@ const StatCell = ({ value, label, i, last }) => {
 // ─── Solution ─────────────────────────────────────────────────────────────────
 const Solution = () => (
   <Section alt>
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6rem", alignItems: "center" }}>
+    <div className="solution-grid">
       <Reveal>
         <Label>The Solution</Label>
         <SectionTitle>Decision intelligence that moves at machine speed.</SectionTitle>
@@ -258,13 +258,11 @@ const StepCard = ({ n, title, body, tag }) => {
         overflow: "hidden",
       }}
     >
-      {/* Accent top border on hover */}
       <div style={{
         position: "absolute", top: 0, left: 0, right: 0, height: "1px",
         background: hov ? `linear-gradient(90deg, transparent, ${T.accent}, transparent)` : "transparent",
         transition: `background 0.3s ${T.easeIn}`,
       }} />
-
       <div style={{
         display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "2rem",
       }}>
@@ -284,7 +282,6 @@ const StepCard = ({ n, title, body, tag }) => {
           borderRadius: "3px",
         }}>{tag}</span>
       </div>
-
       <div style={{
         fontFamily: T.sans, fontSize: "0.88rem", fontWeight: 500,
         color: T.text, marginBottom: "0.75rem", letterSpacing: "0.005em",
@@ -310,12 +307,12 @@ const FEATURES = [
 const Features = () => (
   <Section alt>
     <Reveal>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "0" }}>
+      <div className="features-header">
         <div>
           <Label>Capabilities</Label>
           <SectionTitle>Built for the edge<br />of every transaction.</SectionTitle>
         </div>
-        <div style={{ paddingBottom: "1.5rem" }}>
+        <div className="features-header-btn">
           <Button T={T}>View all features →</Button>
         </div>
       </div>
@@ -411,7 +408,6 @@ const APICard = () => {
         boxShadow: hov ? `0 0 0 1px rgba(61,90,254,0.1), 0 8px 40px rgba(0,0,0,0.5)` : `0 4px 24px rgba(0,0,0,0.3)`,
       }}
     >
-      {/* Title bar */}
       <div style={{
         background: "rgba(255,255,255,0.025)",
         padding: "0.65rem 1.25rem",
@@ -429,8 +425,6 @@ const APICard = () => {
           POST /v1/score  ·  200 OK  ·  38ms
         </span>
       </div>
-
-      {/* JSON */}
       <div style={{ padding: "1.4rem 1.6rem" }}>
         <div><span style={{ color: T.textSub }}>{"{"}</span></div>
         <Line k="risk_score"  v={<><Num>94.7</Num>,</>} />
@@ -490,7 +484,6 @@ const CTA = () => (
     position: "relative", overflow: "hidden",
     padding: "10rem 2rem", background: T.bg, textAlign: "center",
   }}>
-    {/* Glow */}
     <div style={{
       position: "absolute", top: "50%", left: "50%",
       transform: "translate(-50%, -50%)",
@@ -505,14 +498,11 @@ const CTA = () => (
       background: "radial-gradient(ellipse at center, rgba(61,90,254,0.05) 0%, transparent 70%)",
       filter: "blur(30px)",
     }} />
-
-    {/* Horizontal rule lines */}
     <div style={{
       position: "absolute", top: "50%", left: "5%", right: "5%", height: "1px",
       background: `linear-gradient(90deg, transparent, ${T.border} 20%, ${T.border} 80%, transparent)`,
       transform: "translateY(-80px)", pointerEvents: "none",
     }} />
-
     <div style={{ position: "relative", zIndex: 1, maxWidth: "540px", margin: "0 auto" }}>
       <Reveal>
         <p style={{
@@ -561,12 +551,7 @@ const Footer = () => {
       padding: "4rem 2rem 2rem",
     }}>
       <div style={{ maxWidth: "1080px", margin: "0 auto" }}>
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "2fr 1fr 1fr 1fr",
-          gap: "3rem",
-          marginBottom: "3.5rem",
-        }}>
+        <div className="footer-grid" style={{ marginBottom: "3.5rem" }}>
           {/* Brand col */}
           <div>
             <span style={{
@@ -582,7 +567,6 @@ const Footer = () => {
             </p>
           </div>
 
-          {/* Link cols */}
           {cols.map(({ head, links }) => (
             <div key={head}>
               <p style={{
