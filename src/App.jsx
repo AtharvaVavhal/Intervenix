@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import "./App.css";
 import Hero from "./components/Hero";
 import Nav from "./components/Nav";
 import Reveal from "./components/UI/Reveal";
 import Button from "./components/UI/Button";
+import RequestAccess from "./components/RequestAccess";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const T = {
@@ -479,7 +480,7 @@ const LogoBar = () => (
 );
 
 // ─── CTA ─────────────────────────────────────────────────────────────────────
-const CTA = () => (
+const CTA = ({ onRequestAccess }) => (
   <section style={{
     position: "relative", overflow: "hidden",
     padding: "10rem 2rem", background: T.bg, textAlign: "center",
@@ -524,7 +525,7 @@ const CTA = () => (
           Join institutions already running Intervenix across their risk stack.
         </Body>
         <div className="cta-row" style={{ justifyContent: "center" }}>
-          <Button T={T} primary>Request Early Access</Button>
+          <Button T={T} primary onClick={onRequestAccess}>Request Early Access</Button>
           <Button T={T}>Talk to an Engineer</Button>
         </div>
         <p style={{
@@ -552,7 +553,6 @@ const Footer = () => {
     }}>
       <div style={{ maxWidth: "1080px", margin: "0 auto" }}>
         <div className="footer-grid" style={{ marginBottom: "3.5rem" }}>
-          {/* Brand col */}
           <div>
             <span style={{
               fontFamily: T.serif, fontSize: "1rem",
@@ -617,13 +617,92 @@ const FooterLink = ({ children }) => {
   );
 };
 
+// ─── Request Access Modal ─────────────────────────────────────────────────────
+const AccessModal = ({ onClose }) => {
+  // Close on Escape key
+  useState(() => {
+    const handler = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handler);
+    // Lock body scroll
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", handler);
+      document.body.style.overflow = "";
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{
+        position: "fixed", inset: 0, zIndex: 10000,
+        background: "rgba(8,8,12,0.88)",
+        backdropFilter: "blur(10px)",
+        overflowY: "auto",
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "center",
+        animation: "modalFadeIn 0.25s ease forwards",
+      }}
+    >
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        style={{
+          position: "fixed", top: "1.25rem", right: "1.5rem",
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.07)",
+          color: "rgba(237,237,240,0.4)",
+          fontFamily: T.mono,
+          fontSize: "0.75rem",
+          padding: "0.4rem 0.85rem",
+          cursor: "pointer",
+          borderRadius: "4px",
+          zIndex: 10001,
+          transition: "color 0.15s, background 0.15s, border-color 0.15s",
+          letterSpacing: "0.04em",
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.color = "#EDEDF0";
+          e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+          e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.color = "rgba(237,237,240,0.4)";
+          e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+          e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)";
+        }}
+        aria-label="Close"
+      >
+        ✕ esc
+      </button>
+
+      {/* Form fills the modal */}
+      <div style={{ width: "100%", minHeight: "100vh" }}>
+        <RequestAccess />
+      </div>
+    </div>
+  );
+};
+
 // ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
+  const [showAccess, setShowAccess] = useState(false);
+  const openAccess  = () => setShowAccess(true);
+  const closeAccess = () => setShowAccess(false);
+
   return (
     <>
+      <style>{`
+        @keyframes modalFadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+      `}</style>
+
       <Grain />
-      <Nav T={T} />
-      <Hero T={T} />
+      <Nav T={T} onRequestAccess={openAccess} />
+      <Hero T={T} onRequestAccess={openAccess} />
       <Divider />
       <Problem />
       <Divider />
@@ -635,8 +714,10 @@ export default function App() {
       <Divider />
       <Output />
       <LogoBar />
-      <CTA />
+      <CTA onRequestAccess={openAccess} />
       <Footer />
+
+      {showAccess && <AccessModal onClose={closeAccess} />}
     </>
   );
 }
