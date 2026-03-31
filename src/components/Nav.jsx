@@ -3,7 +3,7 @@ import Button from "./UI/Button";
 
 const LINKS = ["Product", "How It Works", "Capabilities", "Docs"];
 
-export default function Nav({ T }) {
+export default function Nav({ T, onRequestAccess }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -67,7 +67,7 @@ export default function Nav({ T }) {
           gap: "0.5rem",
         }}>
           <Button T={T} ghost small>Sign in</Button>
-          <Button T={T} primary small>Request Access</Button>
+          <Button T={T} primary small onClick={onRequestAccess}>Request Access</Button>
         </div>
 
         {/* Hamburger */}
@@ -156,7 +156,9 @@ export default function Nav({ T }) {
           opacity: open ? 1 : 0,
         }}>
           <Button T={T} ghost>Sign in</Button>
-          <Button T={T} primary>Request Access</Button>
+          <Button T={T} primary onClick={() => { setOpen(false); onRequestAccess?.(); }}>
+            Request Access
+          </Button>
         </div>
       </div>
 
