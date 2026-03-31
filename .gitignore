@@ -54,3 +54,10 @@ __pycache__/
 # Local model/output folders
 models/
 backend/models/
+backend/venv/
+backend/*.csv
+*.zip
+*.joblib
+__pycache__/
+*.pyc
+.DS_Store
