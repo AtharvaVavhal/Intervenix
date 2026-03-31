@@ -459,7 +459,7 @@ const HeroBg = ({ scrollY, mousePos }) => {
 
 // ─── Problem ──────────────────────────────────────────────────────────────────
 const stats = [
-  { value: "340ms", label: "average fraud decision window" },
+  { value: "340 ms", label: "average fraud decision window" },
   { value: "$4.7T",  label: "lost annually to financial crime" },
   { value: "67%",   label: "alerts still handled manually" },
 ];
