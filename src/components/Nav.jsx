@@ -156,7 +156,7 @@ export default function Nav({ T, onRequestAccess }) {
           opacity: open ? 1 : 0,
         }}>
           <Button T={T} ghost>Sign in</Button>
-          <Button T={T} primary onClick={() => { setOpen(false); onRequestAccess?.(); }}>
+          <Button T={T} primary onClick={() => { setOpen(false); onRequestAccess(); }}>
             Request Access
           </Button>
         </div>
