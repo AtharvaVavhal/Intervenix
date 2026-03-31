@@ -777,7 +777,7 @@ const Footer = () => (
   }}>
     <span style={{ fontFamily: T.serif, fontSize: "0.95rem", color: T.textPrimary }}>Intervenix</span>
     <span style={{ fontFamily: T.sans, fontSize: "0.72rem", color: T.textSecondary, letterSpacing: "0.02em" }}>
-      © 2025 Intervenix. All rights reserved.
+      © 2026 Intervenix. All rights reserved. an Acedimic project of Vishwakarma Institute of Technology.
     </span>
     <div style={{ display: "flex", gap: "2rem" }}>
       {["Privacy", "Terms", "Security"].map(l => <FooterLink key={l}>{l}</FooterLink>)}
