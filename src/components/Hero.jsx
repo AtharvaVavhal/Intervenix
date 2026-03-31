@@ -39,7 +39,13 @@ export default function Hero({ T }) {
       ref={heroRef}
       style={{
         position: "relative",
-        minHeight: "100vh",
+        // 100svh = "small viewport height" — excludes the browser chrome bar.
+        // On iOS Safari / mobile Chrome, 100vh is measured without the chrome
+        // visible, so when it reappears on scroll the hero overflows below the
+        // fold and causes unwanted bounce/scroll. 100svh is the guaranteed
+        // minimum visible area. Browsers that don't support svh fall back to
+        // 100vh via CSS cascade (add the fallback in App.css if needed).
+        minHeight: "100svh",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",

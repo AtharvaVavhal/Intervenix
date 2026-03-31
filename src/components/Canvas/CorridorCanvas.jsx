@@ -34,8 +34,20 @@ const DEPTH        = RIB_COUNT * RIB_SPACING;
 const CENTER_Y     = (FLOOR_Y + CEIL_Y) / 2;
 const CA_OFFSET    = new THREE.Vector2(0.00012, 0.00012);
 
-const PARTICLE_COUNT = 140;
+// ─── Dynamic particle count based on screen size + hardware concurrency ───────
+// Reduces GPU/CPU load on mobile without a perceptible visual drop
+function resolveParticleCount() {
+  if (typeof window === "undefined") return 140;
+  const w     = window.innerWidth;
+  const cores = navigator.hardwareConcurrency ?? 8;
+  if (w <= 480)                return 50;   // small phones
+  if (w <= 768)                return 75;   // large phones / small tablets
+  if (w <= 1024 || cores <= 4) return 100;  // tablets / low-end laptops
+  return 140;                               // full desktop
+}
+const PARTICLE_COUNT = resolveParticleCount();
 const TOTAL_SLOTS    = PARTICLE_COUNT * 2; // real + ghost twins
+
 const SPAWN_Z        = 6.0;
 const KILL_Z         = -72;
 const EV_THRESHOLD   = 0.0;
@@ -49,7 +61,10 @@ const ZONE = {
   OUTPUT:   { start: -50,  end: -72 },
 };
 
-// ─── Custom Particle Shader ── NEW ────────────────────────────────────────────
+// ─── Detect mobile once at module level ──────────────────────────────────────
+const IS_MOBILE = typeof window !== "undefined" && window.innerWidth <= 768;
+
+// ─── Custom Particle Shader ───────────────────────────────────────────────────
 const PARTICLE_VERT = /* glsl */`
   attribute float aEV;
   attribute float aConfidence;
@@ -177,19 +192,37 @@ function makeNoiseTexture(w = 256, h = 256, lo = 48, hi = 82, rx = 10, ry = 10) 
 }
 
 // ─── Camera ───────────────────────────────────────────────────────────────────
+// Reads `size` from useThree() so it reacts to every resize/orientation change.
+// FOV is widened on portrait/narrow viewports so the corridor doesn't clip.
+// Z pull-back on mobile keeps the entrance framing intentional.
 function CameraController({ activityRef }) {
-  const { camera } = useThree();
+  const { camera, size } = useThree();
   const clock      = useRef(0);
   const lookTarget = useMemo(() => new THREE.Vector3(0, -0.04, -25), []);
   const camTarget  = useMemo(() => new THREE.Vector3(0.22, 0.05, 5.0), []);
+
+  // Recompute FOV on every resize / orientation flip
+  useEffect(() => {
+    const aspect = size.width / size.height;
+    if      (aspect < 0.6)  camera.fov = 88; // portrait phone
+    else if (aspect < 0.85) camera.fov = 72; // portrait tablet
+    else if (aspect < 1.2)  camera.fov = 62; // landscape tablet / small laptop
+    else                    camera.fov = 52; // desktop
+    camera.updateProjectionMatrix();
+  }, [camera, size]);
 
   useFrame((_, dt) => {
     clock.current += dt;
     const t        = clock.current;
     const activity = activityRef.current;
+    const aspect   = size.width / size.height;
+
+    // Pull camera back on narrow viewports so corridor walls don't clip
+    const zPull    = aspect < 0.6 ? 2.5 : aspect < 0.85 ? 1.2 : 0;
+
     camTarget.x    = 0.22 + activity * -0.12;
     camTarget.y    = 0.05 + Math.sin(t * 0.11) * 0.004;
-    camTarget.z    = 5.0  + Math.sin(t * 0.045) * 1.1;
+    camTarget.z    = 5.0 + zPull + Math.sin(t * 0.045) * 1.1;
     camera.position.lerp(camTarget, 0.004);
     lookTarget.x   = activity * -0.06;
     lookTarget.y   = -0.04 + activity * 0.04;
@@ -198,7 +231,7 @@ function CameraController({ activityRef }) {
   return null;
 }
 
-// ─── Particle System ── NEW ───────────────────────────────────────────────────
+// ─── Particle System ──────────────────────────────────────────────────────────
 function ParticleSystem({ activityRef }) {
   const meshRef   = useRef();
   const particles = useRef(Array.from({ length: PARTICLE_COUNT }, (_, i) => makeParticle(i)));
@@ -254,13 +287,13 @@ function ParticleSystem({ activityRef }) {
         (z - ZONE.DECISION.start) / (ZONE.OUTPUT.start - ZONE.DECISION.start), 0, 1
       );
 
-      // ── Force field: EV → spatial attraction/repulsion ── NEW ─────────────
+      // ── Force field: EV → spatial attraction/repulsion ────────────────────
       const evForce  = THREE.MathUtils.clamp(p.ev * 6, -1, 1);
       const targetX  = evForce > 0 ? 0 : p.lane * HALF_W * 0.72;
       const targetY  = CENTER_Y + (evForce > 0 ? 0 : (p.lane % 2 === 0 ? 0.3 : -0.3));
       const forceMag = Math.abs(evForce) * 0.06;
 
-      // ── Uncertainty jitter: low confidence = noisy path ── NEW ────────────
+      // ── Uncertainty jitter: low confidence = noisy path ───────────────────
       const jitter = (1 - p.confidence) * 0.018;
       const flick  = Math.sin(t * 16 + p.phase) * (1 - p.confidence) * 0.012;
 
@@ -285,7 +318,7 @@ function ParticleSystem({ activityRef }) {
         p.y += Math.sin(angle) * 0.003 * p.confidence;
       }
 
-      // ── Near-miss tension ── NEW ──────────────────────────────────────────
+      // ── Near-miss tension ─────────────────────────────────────────────────
       const inDecision = z <= ZONE.DECISION.start && z > ZONE.DECISION.end;
       const nearMiss   = Math.abs(p.ev - EV_THRESHOLD) < NEAR_MISS_BAND;
       if (inDecision && nearMiss && p.state === 0) {
@@ -333,9 +366,7 @@ function ParticleSystem({ activityRef }) {
       buffers.current.state[i]      = p.state;
       buffers.current.zoneT[i]      = p.zoneT;
 
-      // ── Counterfactual twin (ghost) — slot i + PARTICLE_COUNT ── NEW ──────
-      // Ghost = no-intervention outcome
-      // Visible when real is eliminated (shows what would have happened anyway)
+      // ── Counterfactual twin (ghost) — slot i + PARTICLE_COUNT ─────────────
       const gi       = i + PARTICLE_COUNT;
       const gVisible = p.state === 3;
       const gx       = THREE.MathUtils.clamp(p.x + p.lane * HALF_W * 0.55, -HALF_W + 0.1, HALF_W - 0.1);
@@ -346,7 +377,7 @@ function ParticleSystem({ activityRef }) {
       dummy.rotation.y = p.phase * 1.4;
       dummy.updateMatrix();
       meshRef.current.setMatrixAt(gi, dummy.matrix);
-      buffers.current.ev[gi]         = p.ev * -1; // ghost carries inverted EV
+      buffers.current.ev[gi]         = p.ev * -1;
       buffers.current.confidence[gi] = p.confidence * 0.5;
       buffers.current.state[gi]      = 1;
       buffers.current.zoneT[gi]      = p.zoneT;
@@ -367,7 +398,7 @@ function ParticleSystem({ activityRef }) {
   );
 }
 
-// ─── Decision Boundary ── NEW ─────────────────────────────────────────────────
+// ─── Decision Boundary ────────────────────────────────────────────────────────
 function DecisionBoundary({ activityRef }) {
   const clock    = useRef(0);
   const planeMat = useMemo(() => new THREE.MeshBasicMaterial({
@@ -597,7 +628,8 @@ function Scene() {
       <EffectComposer>
         <Bloom luminanceThreshold={0.06} luminanceSmoothing={0.88} intensity={0.62} mipmapBlur />
         <Vignette eskil={false} offset={0.08} darkness={1.55} />
-        <ChromaticAberration offset={CA_OFFSET} />
+        {/* ChromaticAberration skipped on mobile — full-screen pass, invisible at small sizes */}
+        {!IS_MOBILE && <ChromaticAberration offset={CA_OFFSET} />}
       </EffectComposer>
     </>
   );
@@ -607,10 +639,24 @@ export default function CorridorCanvas({ mouseRef }) {
   return (
     <Canvas
       camera={{ position: [0, 0.05, 5.0], fov: 52, near: 0.1, far: 140 }}
-      dpr={[1, 1.5]}
-      gl={{ antialias: true, alpha: false, powerPreference: "high-performance", toneMapping: THREE.ACESFilmicToneMapping }}
+      // Cap DPR at 1 on mobile — 1.5× on a 3× screen wastes GPU with no visible gain
+      dpr={IS_MOBILE ? [1, 1] : [1, 1.5]}
+      gl={{
+        // Disable MSAA on mobile — device pixel density handles aliasing at 1× DPR
+        antialias: !IS_MOBILE,
+        alpha: false,
+        powerPreference: "high-performance",
+        toneMapping: THREE.ACESFilmicToneMapping,
+      }}
       onCreated={({ gl }) => { gl.toneMappingExposure = 1.08; }}
-      style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0 }}
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        zIndex: 0,
+      }}
     >
       <Scene />
     </Canvas>

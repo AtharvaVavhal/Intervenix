@@ -85,6 +85,22 @@
   flex-wrap: wrap;
 }
 
+/* ── Hero canvas wrapper ─────────────────────────────────── */
+/* 100svh = safe viewport height, excludes browser chrome on iOS Safari.
+   100vh on mobile Safari is measured without the chrome visible, so the
+   canvas overflows below the fold when the chrome reappears on scroll.
+   100svh is the minimum guaranteed visible area — no overflow, ever. */
+.hero-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100svh;
+  /* Fallback for browsers that don't support svh (< ~2022) */
+  height: 100vh;
+  /* Override with svh where supported */
+  height: 100svh;
+  overflow: hidden;
+}
+
 /* ── Tablet ───────────────────────────────────────────────── */
 @media (max-width: 900px) {
   .solution-grid  { grid-template-columns: 1fr; gap: 3rem; }
@@ -110,6 +126,16 @@
   .stat-cell:last-child { border-bottom: none; }
   .nav-links    { display: none !important; }
   .cta-row      { justify-content: center; }
+
+  /* Override inline Section padding — `padding: "7rem 2rem"` in JSX
+     cannot be targeted by media queries without !important here.
+     7rem top/bottom is excessive on a 390px screen. */
+  section {
+    padding-top: 4rem !important;
+    padding-bottom: 4rem !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+  }
 }
 
 /* ── Base reset ───────────────────────────────────────────── */
