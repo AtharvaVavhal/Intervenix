@@ -1,50 +1,71 @@
+/*
+ * index.css — Reset only.
+ *
+ * Single responsibility: normalize browser defaults.
+ * No tokens, no layout, no component styles.
+ * Import order in main.jsx: index.css → tokens.css → App.css
+ */
+
+/* ── Google Fonts ────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=DM+Sans:wght@300;400;500&display=swap');
+
+/* ── Box model ───────────────────────────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+  margin:     0;
+  padding:    0;
 }
 
+/* ── Root ────────────────────────────────────────────────────────────────── */
 html {
-  scroll-behavior: smooth;
-  height: 100%;
+  scroll-behavior:          smooth;
+  height:                   100%;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: #08080c;
-  color: #EDEDF0;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  overflow-x: hidden;
-  min-height: 100%;
-  font-family: 'Inter', sans-serif;
+  min-height:                100%;
+  overflow-x:                hidden;
+  -webkit-font-smoothing:    antialiased;
+  -moz-osx-font-smoothing:   grayscale;
+  text-rendering:            optimizeLegibility;
 }
 
 #root {
   min-height: 100vh;
-  display: flex;
+  min-height: 100svh;
+  display:    flex;
   flex-direction: column;
 }
 
+/* ── Interactive elements ────────────────────────────────────────────────── */
 button {
-  cursor: pointer;
-  border: none;
-  background: none;
+  cursor:      pointer;
+  border:      none;
+  background:  none;
   font-family: inherit;
-  outline: none;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline:        2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius:  3px;
 }
 
 a {
   text-decoration: none;
-  color: inherit;
+  color:           inherit;
 }
 
+/* ── Selection ───────────────────────────────────────────────────────────── */
 ::selection {
   background: rgba(61, 90, 254, 0.28);
-  color: #fff;
+  color:      #fff;
 }
 
-::-webkit-scrollbar { width: 3px; }
-::-webkit-scrollbar-track { background: #08080c; }
-::-webkit-scrollbar-thumb { background: rgba(61,90,254,0.22); border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(61,90,254,0.5); }
+/* ── Scrollbar (Chromium) ────────────────────────────────────────────────── */
+::-webkit-scrollbar              { width: 3px; }
+::-webkit-scrollbar-track        { background: var(--color-bg); }
+::-webkit-scrollbar-thumb        { background: var(--color-accent-border); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover  { background: rgba(61, 90, 254, 0.5); }

@@ -1,191 +1,178 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=DM+Sans:wght@300;400;500&display=swap');
+/*
+ * App.css — App-wide layout utilities and shared animations.
+ *
+ * Rules:
+ *   - Layout classes used by multiple components go here.
+ *   - Animations used by multiple components go here.
+ *   - Component-specific styles go in *.module.css files.
+ *   - All values reference tokens from tokens.css.
+ *   - Zero !important.
+ */
 
-/* ── Animations ─────────────────────────────────────────── */
+/* ── Shared animations ───────────────────────────────────────────────────── */
+
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(28px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
+
 @keyframes badgePulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(61,90,254,0.4); }
-  50%       { box-shadow: 0 0 0 5px rgba(61,90,254,0); }
+  0%, 100% { box-shadow: 0 0 0 0   rgba(61, 90, 254, 0.4); }
+  50%       { box-shadow: 0 0 0 5px rgba(61, 90, 254, 0); }
 }
+
 @keyframes dotBlink {
-  0%, 100% { opacity: 1; }
+  0%, 100% { opacity: 1;    }
   50%       { opacity: 0.25; }
 }
+
 @keyframes shimmer {
   0%   { background-position: -200% center; }
   100% { background-position:  200% center; }
 }
 
-/* ── Layout grids ────────────────────────────────────────── */
-.solution-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6rem;
-  align-items: center;
+/* ── Section base ────────────────────────────────────────────────────────── */
+/*
+ * All page sections use this. Padding is driven by tokens so
+ * the responsive override in tokens.css handles mobile automatically —
+ * no !important, no media query duplication here.
+ */
+.section {
+  padding: var(--section-padding-v) var(--section-padding-h);
 }
 
+/* ── Layout grids ────────────────────────────────────────────────────────── */
+.solution-grid,
 .output-grid {
-  display: grid;
+  display:               grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6rem;
-  align-items: center;
+  gap:                   6rem;
+  align-items:           center;
 }
 
 .stats-grid {
-  display: grid;
+  display:               grid;
   grid-template-columns: repeat(3, 1fr);
-  border-top: 1px solid rgba(255,255,255,0.05);
+  border-top:            1px solid var(--color-border);
 }
 
 .steps-grid {
-  display: grid;
+  display:               grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1px;
-  margin-top: 4rem;
+  gap:                   1px;
+  margin-top:            4rem;
 }
 
 .features-grid {
-  display: grid;
+  display:               grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1px;
-  margin-top: 4rem;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.05);
-  border-radius: 2px;
-  overflow: hidden;
+  gap:                   1px;
+  margin-top:            4rem;
+  background:            var(--color-border-subtle);
+  border:                1px solid var(--color-border);
+  border-radius:         var(--radius-sm);
+  overflow:              hidden;
 }
 
+.footer-grid {
+  display:               grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap:                   3rem;
+}
+
+/* ── Features header ─────────────────────────────────────────────────────── */
 .features-header {
-  display: flex;
+  display:         flex;
   justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 0;
+  align-items:     flex-end;
 }
 
 .features-header-btn {
   padding-bottom: 1.5rem;
 }
 
-.footer-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
-  gap: 3rem;
-}
-
-.cta-row {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-/* ── Hero canvas wrapper ─────────────────────────────────── */
-/* 100svh = safe viewport height, excludes browser chrome on iOS Safari.
-   100vh on mobile Safari is measured without the chrome visible, so the
-   canvas overflows below the fold when the chrome reappears on scroll.
-   100svh is the minimum guaranteed visible area — no overflow, ever. */
+/* ── Hero canvas wrapper ─────────────────────────────────────────────────── */
+/*
+ * @supports ensures we only apply 100svh when the browser supports it.
+ * Without this, some older browsers that partially parse svh would
+ * apply it incorrectly. The base 100vh is the safe universal default.
+ */
 .hero-wrapper {
   position: relative;
-  width: 100%;
-  height: 100svh;
-  /* Fallback for browsers that don't support svh (< ~2022) */
-  height: 100vh;
-  /* Override with svh where supported */
-  height: 100svh;
+  width:    100%;
+  height:   100vh;
   overflow: hidden;
 }
 
-/* ── Tablet ───────────────────────────────────────────────── */
-@media (max-width: 900px) {
-  .solution-grid  { grid-template-columns: 1fr; gap: 3rem; }
-  .steps-grid     { grid-template-columns: 1fr; }
-  .features-grid  { grid-template-columns: 1fr 1fr; }
-  .output-grid    { grid-template-columns: 1fr; gap: 3rem; }
-  .footer-grid    { grid-template-columns: 1fr 1fr; gap: 2rem; }
+@supports (height: 100svh) {
+  .hero-wrapper {
+    height: 100svh;
+  }
 }
 
-/* ── Mobile ───────────────────────────────────────────────── */
+/* ── Shared stat cell ────────────────────────────────────────────────────── */
+.stat-cell {
+  padding: 3rem 2.5rem;
+  border-right: 1px solid var(--color-border);
+}
+
+.stat-cell:last-child {
+  border-right: none;
+}
+
+/* ── CTA row ─────────────────────────────────────────────────────────────── */
+.cta-row {
+  display:     flex;
+  gap:         0.75rem;
+  align-items: center;
+  flex-wrap:   wrap;
+}
+
+/* ── Tablet (≤ 900px) ────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .solution-grid { grid-template-columns: 1fr; gap: 3rem; }
+  .output-grid   { grid-template-columns: 1fr; gap: 3rem; }
+  .steps-grid    { grid-template-columns: 1fr; }
+  .features-grid { grid-template-columns: 1fr 1fr; }
+  .footer-grid   { grid-template-columns: 1fr 1fr; gap: 2rem; }
+}
+
+/* ── Mobile (≤ 640px) ────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
-  .stats-grid     { grid-template-columns: 1fr; }
-  .features-grid  { grid-template-columns: 1fr; }
-  .footer-grid    { grid-template-columns: 1fr; gap: 2rem; }
-  .features-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
-  .features-header-btn { padding-bottom: 0; }
+  .stats-grid    { grid-template-columns: 1fr; }
+  .features-grid { grid-template-columns: 1fr; }
+  .footer-grid   { grid-template-columns: 1fr; gap: 2rem; }
+
+  .features-header {
+    flex-direction: column;
+    align-items:    flex-start;
+    gap:            1rem;
+  }
+
+  .features-header-btn {
+    padding-bottom: 0;
+  }
 
   .stat-cell {
-    border-right: none !important;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    padding: 2rem 0 !important;
+    border-right:  none;
+    border-bottom: 1px solid var(--color-border);
+    padding:       2rem 0;
   }
-  .stat-cell:last-child { border-bottom: none; }
-  .nav-links    { display: none !important; }
-  .cta-row      { justify-content: center; }
 
-  /* Override inline Section padding — `padding: "7rem 2rem"` in JSX
-     cannot be targeted by media queries without !important here.
-     7rem top/bottom is excessive on a 390px screen. */
-  section {
-    padding-top: 4rem !important;
-    padding-bottom: 4rem !important;
-    padding-left: 1.25rem !important;
-    padding-right: 1.25rem !important;
+  .stat-cell:last-child {
+    border-bottom: none;
+  }
+
+  .nav-links {
+    display: none;
+  }
+
+  .cta-row {
+    justify-content: center;
   }
 }
-
-/* ── Base reset ───────────────────────────────────────────── */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-html {
-  scroll-behavior: smooth;
-  height: 100%;
-}
-
-body {
-  background: #08080c;
-  color: #EDEDF0;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  overflow-x: hidden;
-  min-height: 100%;
-  font-family: 'DM Sans', sans-serif;
-}
-
-#root {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-button {
-  cursor: pointer;
-  border: none;
-  background: none;
-  font-family: inherit;
-  outline: none;
-}
-
-a {
-  text-decoration: none;
-  color: inherit;
-}
-
-::selection {
-  background: rgba(61, 90, 254, 0.28);
-  color: #fff;
-}
-
-::-webkit-scrollbar { width: 3px; }
-::-webkit-scrollbar-track { background: #08080c; }
-::-webkit-scrollbar-thumb { background: rgba(61,90,254,0.22); border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(61,90,254,0.5); }

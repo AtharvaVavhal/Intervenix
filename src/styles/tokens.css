@@ -1,0 +1,74 @@
+/*
+ * tokens.css — Single source of truth for all design decisions.
+ *
+ * Rules:
+ *   - Every color, font, easing, and spacing decision lives here.
+ *   - All component modules consume via var(--token-name).
+ *   - No magic numbers anywhere else in the codebase.
+ *   - To retheme the entire app: edit only this file.
+ */
+
+:root {
+  /* ── Color: Backgrounds ─────────────────────────────────────────────── */
+  --color-bg:           #08080c;
+  --color-surface:      #0f0f14;
+  --color-surface-alt:  #13131a;
+
+  /* ── Color: Text ────────────────────────────────────────────────────── */
+  --color-text:         #ededf0;
+  --color-text-muted:   rgba(237, 237, 240, 0.45);
+  --color-text-faint:   rgba(237, 237, 240, 0.22);
+  --color-text-ghost:   rgba(237, 237, 240, 0.18);
+
+  /* ── Color: Accent (brand blue) ─────────────────────────────────────── */
+  --color-accent:         #3d5afe;
+  --color-accent-hover:   #5c73ff;
+  --color-accent-subtle:  rgba(61, 90, 254, 0.08);
+  --color-accent-border:  rgba(61, 90, 254, 0.20);
+  --color-accent-text:    rgba(100, 130, 255, 0.9);
+
+  /* ── Color: Borders / Dividers ──────────────────────────────────────── */
+  --color-border:         rgba(255, 255, 255, 0.05);
+  --color-border-subtle:  rgba(255, 255, 255, 0.04);
+
+  /* ── Typography ─────────────────────────────────────────────────────── */
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body:    'DM Sans', system-ui, sans-serif;
+
+  /* ── Easing ─────────────────────────────────────────────────────────── */
+  --ease-out-expo:   cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out:     cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── Spacing scale ──────────────────────────────────────────────────── */
+  --space-xs:   0.5rem;
+  --space-sm:   1rem;
+  --space-md:   1.5rem;
+  --space-lg:   2.5rem;
+  --space-xl:   4rem;
+  --space-2xl:  7rem;
+
+  /* ── Section padding (used by all <section> elements) ───────────────── */
+  --section-padding-v: var(--space-2xl);
+  --section-padding-h: var(--space-md);
+
+  /* ── Border radius ──────────────────────────────────────────────────── */
+  --radius-sm:  2px;
+  --radius-md:  6px;
+  --radius-pill: 100px;
+}
+
+/* ── Responsive token overrides ──────────────────────────────────────────── */
+/* Reduce section padding on mobile — no !important required anywhere */
+@media (max-width: 640px) {
+  :root {
+    --section-padding-v: 4rem;
+    --section-padding-h: 1.25rem;
+  }
+}
+
+/* ── Apply base tokens to document ──────────────────────────────────────── */
+body {
+  background:  var(--color-bg);
+  color:       var(--color-text);
+  font-family: var(--font-body);
+}
