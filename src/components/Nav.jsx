@@ -93,7 +93,7 @@ export default function Nav({ T, onRequestAccess }) {
           ) : (
             <>
               <Button T={T} ghost small onClick={() => navigate("/login")}>Sign in</Button>
-              <Button T={T} primary small onClick={onRequestAccess}>Request Access</Button>
+              <Button T={T} primary small onClick={() => navigate("/talk-to-engineer")}>Talk to Engineer</Button>
             </>
           )}
         </div>
@@ -198,8 +198,8 @@ export default function Nav({ T, onRequestAccess }) {
               <Button T={T} ghost onClick={() => { setOpen(false); navigate("/login"); }}>
                 Sign in
               </Button>
-              <Button T={T} primary onClick={() => { setOpen(false); onRequestAccess(); }}>
-                Request Access
+              <Button T={T} primary onClick={() => { setOpen(false); navigate("/talk-to-engineer"); }}>
+                Talk to Engineer
               </Button>
             </>
           )}
