@@ -13,6 +13,7 @@ import ProductsPage from "./pages/ProductsPage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import Dashboard from "./pages/Dashboard";
+import TalkToEngineerPage from "./pages/TalkToEngineerPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 
@@ -737,6 +738,7 @@ export default function App() {
         <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="/capabilities" element={<CapabilitiesPage />} />
         <Route path="/docs"         element={<DocsPage />} />
+        <Route path="/talk-to-engineer" element={<TalkToEngineerPage />} />
         <Route path="/login"        element={<LoginPage />} />
         <Route path="/signup"       element={<SignupPage />} />
         <Route path="/dashboard"    element={
