@@ -1,7 +1,14 @@
 import { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import Button from "./UI/Button";
 
-const LINKS = ["Product", "How It Works", "Capabilities", "Docs"];
+// Links with optional route paths. Entries without `to` stay as anchor hrefs.
+const LINKS = [
+  { label: "Product" },
+  { label: "How It Works", to: "/how-it-works" },
+  { label: "Capabilities", to: "/capabilities" },
+  { label: "Docs", to: "/docs" },
+];
 
 export default function Nav({ T, onRequestAccess }) {
   const [scrolled, setScrolled] = useState(false);
@@ -56,7 +63,7 @@ export default function Nav({ T, onRequestAccess }) {
           justifyContent: "center",
           gap: "0.25rem",
         }}>
-          {LINKS.map((l) => <NavLink key={l}>{l}</NavLink>)}
+          {LINKS.map((l) => <NavLink key={l.label} to={l.to}>{l.label}</NavLink>)}
         </div>
 
         {/* Desktop CTAs */}
@@ -125,26 +132,32 @@ export default function Nav({ T, onRequestAccess }) {
         transform: open ? "translateY(0)" : "translateY(-12px)",
         pointerEvents: open ? "auto" : "none",
       }}>
-        {LINKS.map((l, i) => (
-          <a
-            key={l}
-            href="#"
-            onClick={() => setOpen(false)}
-            style={{
-              fontFamily: "'DM Sans', sans-serif",
-              fontSize: "1.5rem",
-              fontWeight: 400,
-              color: "rgba(237,237,240,0.75)",
-              padding: "0.75rem 2rem",
-              letterSpacing: "-0.01em",
-              transition: `opacity 0.3s ease ${i * 0.05}s, transform 0.3s ease ${i * 0.05}s`,
-              opacity: open ? 1 : 0,
-              transform: open ? "translateY(0)" : "translateY(10px)",
-            }}
-          >
-            {l}
-          </a>
-        ))}
+        {LINKS.map((l, i) => {
+          const Tag = l.to ? Link : "a";
+          const tagProps = l.to
+            ? { to: l.to }
+            : { href: "#" };
+          return (
+            <Tag
+              key={l.label}
+              {...tagProps}
+              onClick={() => setOpen(false)}
+              style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: "1.5rem",
+                fontWeight: 400,
+                color: "rgba(237,237,240,0.75)",
+                padding: "0.75rem 2rem",
+                letterSpacing: "-0.01em",
+                transition: `opacity 0.3s ease ${i * 0.05}s, transform 0.3s ease ${i * 0.05}s`,
+                opacity: open ? 1 : 0,
+                transform: open ? "translateY(0)" : "translateY(10px)",
+              }}
+            >
+              {l.label}
+            </Tag>
+          );
+        })}
 
         <div style={{
           display: "flex",
@@ -172,24 +185,51 @@ export default function Nav({ T, onRequestAccess }) {
   );
 }
 
-function NavLink({ children }) {
+function NavLink({ children, to }) {
   const [hov, setHov] = useState(false);
+  const location = useLocation();
+  const active = to ? location.pathname === to : false;
+
+  const sharedStyle = {
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: "0.80rem",
+    fontWeight: active ? 500 : 400,
+    color: active
+      ? "rgba(237,237,240,0.9)"
+      : hov
+        ? "rgba(237,237,240,0.9)"
+        : "rgba(237,237,240,0.45)",
+    padding: "0.4rem 0.85rem",
+    borderRadius: "6px",
+    background: active
+      ? "rgba(61,90,254,0.1)"
+      : hov
+        ? "rgba(255,255,255,0.05)"
+        : "transparent",
+    border: active ? "1px solid rgba(61,90,254,0.18)" : "1px solid transparent",
+    transition: "color 0.15s ease, background 0.15s ease, border-color 0.15s ease",
+    letterSpacing: "0.01em",
+  };
+
+  if (to) {
+    return (
+      <Link
+        to={to}
+        onMouseEnter={() => setHov(true)}
+        onMouseLeave={() => setHov(false)}
+        style={sharedStyle}
+      >
+        {children}
+      </Link>
+    );
+  }
+
   return (
     <a
       href="#"
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
-      style={{
-        fontFamily: "'DM Sans', sans-serif",
-        fontSize: "0.80rem",
-        fontWeight: 400,
-        color: hov ? "rgba(237,237,240,0.9)" : "rgba(237,237,240,0.45)",
-        padding: "0.4rem 0.85rem",
-        borderRadius: "6px",
-        background: hov ? "rgba(255,255,255,0.05)" : "transparent",
-        transition: "color 0.15s ease, background 0.15s ease",
-        letterSpacing: "0.01em",
-      }}
+      style={sharedStyle}
     >
       {children}
     </a>

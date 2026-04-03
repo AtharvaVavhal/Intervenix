@@ -1,10 +1,14 @@
 import { useState } from "react";
+import { Routes, Route } from "react-router-dom";
 import "./App.css";
 import Hero from "./components/Hero";
 import Nav from "./components/Nav";
 import Reveal from "./components/UI/Reveal";
 import Button from "./components/UI/Button";
 import RequestAccess from "./components/RequestAccess";
+import HowItWorksPage from "./pages/HowItWorksPage";
+import CapabilitiesPage from "./pages/CapabilitiesPage";
+import DocsPage from "./pages/DocsPage";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const T = {
@@ -685,8 +689,8 @@ const AccessModal = ({ onClose }) => {
   );
 };
 
-// ─── App ──────────────────────────────────────────────────────────────────────
-export default function App() {
+// ─── Landing page (extracted so routing can reference it) ────────────────────
+function LandingPage() {
   const [showAccess, setShowAccess] = useState(false);
   const openAccess  = () => setShowAccess(true);
   const closeAccess = () => setShowAccess(false);
@@ -719,5 +723,17 @@ export default function App() {
 
       {showAccess && <AccessModal onClose={closeAccess} />}
     </>
+  );
+}
+
+// ─── App ──────────────────────────────────────────────────────────────────────
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/"              element={<LandingPage />} />
+      <Route path="/how-it-works"  element={<HowItWorksPage />} />
+      <Route path="/capabilities"  element={<CapabilitiesPage />} />
+      <Route path="/docs"           element={<DocsPage />} />
+    </Routes>
   );
 }
