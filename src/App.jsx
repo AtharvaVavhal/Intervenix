@@ -10,6 +10,11 @@ import HowItWorksPage from "./pages/HowItWorksPage";
 import CapabilitiesPage from "./pages/CapabilitiesPage";
 import DocsPage from "./pages/DocsPage";
 import ProductsPage from "./pages/ProductsPage";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import Dashboard from "./pages/Dashboard";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { AuthProvider } from "./context/AuthContext";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const T = {
@@ -726,12 +731,21 @@ function LandingPage() {
 // ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
   return (
-    <Routes>
-      <Route path="/"              element={<LandingPage />} />
-      <Route path="/how-it-works"  element={<HowItWorksPage />} />
-      <Route path="/capabilities"  element={<CapabilitiesPage />} />
-      <Route path="/docs"          element={<DocsPage />} />
-      <Route path="/products"      element={<ProductsPage />} />
-    </Routes>
+    <AuthProvider>
+      <Routes>
+        <Route path="/"             element={<LandingPage />} />
+        <Route path="/how-it-works" element={<HowItWorksPage />} />
+        <Route path="/capabilities" element={<CapabilitiesPage />} />
+        <Route path="/docs"         element={<DocsPage />} />
+        <Route path="/login"        element={<LoginPage />} />
+        <Route path="/signup"       element={<SignupPage />} />
+        <Route path="/dashboard"    element={
+          <ProtectedRoute><Dashboard /></ProtectedRoute>
+        } />
+        <Route path="/products"     element={
+          <ProtectedRoute><ProductsPage /></ProtectedRoute>
+        } />
+      </Routes>
+    </AuthProvider>
   );
 }
