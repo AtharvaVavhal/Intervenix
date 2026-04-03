@@ -9,6 +9,7 @@ import RequestAccess from "./components/RequestAccess";
 import HowItWorksPage from "./pages/HowItWorksPage";
 import CapabilitiesPage from "./pages/CapabilitiesPage";
 import DocsPage from "./pages/DocsPage";
+import ProductsPage from "./pages/ProductsPage";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const T = {
@@ -623,11 +624,9 @@ const FooterLink = ({ children }) => {
 
 // ─── Request Access Modal ─────────────────────────────────────────────────────
 const AccessModal = ({ onClose }) => {
-  // Close on Escape key
   useState(() => {
     const handler = (e) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", handler);
-    // Lock body scroll
     document.body.style.overflow = "hidden";
     return () => {
       window.removeEventListener("keydown", handler);
@@ -649,7 +648,6 @@ const AccessModal = ({ onClose }) => {
         animation: "modalFadeIn 0.25s ease forwards",
       }}
     >
-      {/* Close button */}
       <button
         onClick={onClose}
         style={{
@@ -681,7 +679,6 @@ const AccessModal = ({ onClose }) => {
         ✕ esc
       </button>
 
-      {/* Form fills the modal */}
       <div style={{ width: "100%", minHeight: "100vh" }}>
         <RequestAccess />
       </div>
@@ -689,7 +686,7 @@ const AccessModal = ({ onClose }) => {
   );
 };
 
-// ─── Landing page (extracted so routing can reference it) ────────────────────
+// ─── Landing page ─────────────────────────────────────────────────────────────
 function LandingPage() {
   const [showAccess, setShowAccess] = useState(false);
   const openAccess  = () => setShowAccess(true);
@@ -733,7 +730,8 @@ export default function App() {
       <Route path="/"              element={<LandingPage />} />
       <Route path="/how-it-works"  element={<HowItWorksPage />} />
       <Route path="/capabilities"  element={<CapabilitiesPage />} />
-      <Route path="/docs"           element={<DocsPage />} />
+      <Route path="/docs"          element={<DocsPage />} />
+      <Route path="/products"      element={<ProductsPage />} />
     </Routes>
   );
 }

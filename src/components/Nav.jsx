@@ -4,10 +4,10 @@ import Button from "./UI/Button";
 
 // Links with optional route paths. Entries without `to` stay as anchor hrefs.
 const LINKS = [
-  { label: "Product" },
+  { label: "Product",      to: "/products" },
   { label: "How It Works", to: "/how-it-works" },
   { label: "Capabilities", to: "/capabilities" },
-  { label: "Docs", to: "/docs" },
+  { label: "Docs",         to: "/docs" },
 ];
 
 export default function Nav({ T, onRequestAccess }) {
