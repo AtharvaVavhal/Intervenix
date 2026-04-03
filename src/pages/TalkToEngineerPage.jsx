@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import Nav from "../components/Nav";
+import { submitLead } from "../services/leadApi";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const T = {
@@ -515,8 +516,9 @@ export default function TalkToEngineerPage() {
   const [touched,   setTouched]   = useState({});
   const [direction, setDirection] = useState(1);  // 1 = forward, -1 = back
   const [animKey,   setAnimKey]   = useState(0);
-  const [loading,   setLoading]   = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [loading,     setLoading]     = useState(false);
+  const [submitted,   setSubmitted]   = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
@@ -562,10 +564,20 @@ export default function TalkToEngineerPage() {
       return;
     }
     setLoading(true);
-    // Simulate async submit (wire to backend later)
-    await new Promise(r => setTimeout(r, 900));
-    setLoading(false);
-    setSubmitted(true);
+    setSubmitError("");
+    try {
+      await submitLead(fields);
+      setSubmitted(true);
+    } catch (err) {
+      const msg = (err?.message ?? "").toLowerCase();
+      if (msg.includes("network") || msg.includes("fetch")) {
+        setSubmitError("Cannot reach the server. Check your connection and try again.");
+      } else {
+        setSubmitError(err?.message || "Something went wrong. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
   const heading = STEP_HEADINGS[step - 1];
@@ -647,6 +659,21 @@ export default function TalkToEngineerPage() {
                 {step === 2 && <Step2 fields={fields} errors={errors} set={set} />}
                 {step === 3 && <Step3 fields={fields} errors={errors} set={set} />}
               </div>
+
+              {submitError && (
+                <div style={{
+                  marginTop: "1.25rem",
+                  background: "rgba(248,113,113,0.08)",
+                  border: "1px solid rgba(248,113,113,0.18)",
+                  borderRadius: "6px",
+                  padding: "0.65rem 0.9rem",
+                  fontFamily: T.sans, fontSize: "0.80rem",
+                  color: T.red, lineHeight: 1.5,
+                  animation: "errIn 0.2s ease both",
+                }}>
+                  {submitError}
+                </div>
+              )}
 
               <NavButtons
                 step={step}

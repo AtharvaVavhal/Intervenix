@@ -8,6 +8,7 @@ from .core.config import get_settings
 from .core.database import create_tables
 from .api.auth_routes import router as auth_router
 from .api.dashboard_routes import router as dashboard_router
+from .api.lead_routes import router as lead_router
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -46,6 +47,7 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(dashboard_router)
+app.include_router(lead_router)
 
 
 @app.get("/health")
