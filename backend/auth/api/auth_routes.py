@@ -13,6 +13,7 @@ from ..schemas.auth import (
     TokenResponse,
     AccessTokenResponse,
     UserResponse,
+    UserListItem,
 )
 from ..services import auth_service
 
@@ -66,3 +67,16 @@ def refresh(body: RefreshRequest, db: Session = Depends(get_db)) -> AccessTokenR
 @router.get("/me", response_model=UserResponse)
 def me(current_user: User = Depends(get_current_user)) -> User:
     return current_user
+
+
+@router.get("/users", response_model=list[UserListItem])
+def list_users(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[User]:
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required.",
+        )
+    return db.query(User).order_by(User.id).all()

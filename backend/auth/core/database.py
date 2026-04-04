@@ -49,11 +49,14 @@ def run_migrations() -> None:
     is_pg = not _url.startswith("sqlite")
 
     additive: list[str] = [
-        # leads — scoring columns (added in v2)
+        # leads — scoring columns (v2)
         "ALTER TABLE leads ADD COLUMN lead_score INTEGER NOT NULL DEFAULT 0",
         "ALTER TABLE leads ADD COLUMN priority VARCHAR(16) NOT NULL DEFAULT 'low'",
-        # users — admin flag (added in v3)
+        # users — admin flag (v3)
         "ALTER TABLE users ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT FALSE",
+        # leads — CRM workflow columns (v4)
+        "ALTER TABLE leads ADD COLUMN status VARCHAR(16) NOT NULL DEFAULT 'new'",
+        "ALTER TABLE leads ADD COLUMN assigned_to_id INTEGER",
     ]
 
     pg_only: list[str] = [
