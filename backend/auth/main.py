@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .core.config import get_settings
-from .core.database import create_tables
+from .core.database import create_tables, run_migrations
 from .api.auth_routes import router as auth_router
 from .api.dashboard_routes import router as dashboard_router
 from .api.lead_routes import router as lead_router
@@ -24,6 +24,7 @@ settings = get_settings()
 async def lifespan(app: FastAPI):
     logger.info("Starting up — creating database tables")
     create_tables()
+    run_migrations()
     yield
     logger.info("Shutting down")
 
@@ -39,7 +40,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_origins=settings.allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

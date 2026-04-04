@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
 from ..models.user import User
+from ..core.config import get_settings
 from ..core.security import (
     hash_password,
     verify_password,
@@ -36,12 +37,15 @@ def signup(db: Session, email: str, password: str) -> TokenResponse:
             detail="An account with this email already exists",
         )
 
-    user = User(email=email, hashed_password=hash_password(password))
+    settings  = get_settings()
+    is_admin  = bool(settings.ADMIN_EMAIL and email.lower() == settings.ADMIN_EMAIL.lower())
+
+    user = User(email=email, hashed_password=hash_password(password), is_admin=is_admin)
     db.add(user)
     db.commit()
     db.refresh(user)
 
-    logger.info("New user registered: id=%d email=%s", user.id, user.email)
+    logger.info("New user registered: id=%d email=%s is_admin=%s", user.id, user.email, user.is_admin)
     return _issue_tokens(user.id)
 
 

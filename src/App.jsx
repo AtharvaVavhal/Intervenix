@@ -15,6 +15,7 @@ import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import Dashboard from "./pages/Dashboard";
 import TalkToEngineerPage from "./pages/TalkToEngineerPage";
+import AdminLeadsPage from "./pages/AdminLeadsPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 
@@ -737,6 +738,9 @@ export default function App() {
         } />
         <Route path="/products"     element={
           <ProtectedRoute><ProductsPage /></ProtectedRoute>
+        } />
+        <Route path="/admin/leads"  element={
+          <ProtectedRoute><AdminLeadsPage /></ProtectedRoute>
         } />
       </Routes>
     </AuthProvider>
