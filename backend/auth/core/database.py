@@ -4,6 +4,11 @@ from sqlalchemy.orm import DeclarativeBase, sessionmaker, Session
 from typing import Generator
 from .config import get_settings
 
+# Side-effect imports: register models with Base so create_tables() sees them
+# (imported here rather than in main.py to keep the dependency chain clean)
+def _register_models() -> None:
+    from ..models import user, lead, lead_event  # noqa: F401
+
 settings = get_settings()
 
 _url = settings.database_url  # normalised: sqlite://... or postgresql+psycopg2://...
@@ -35,6 +40,7 @@ def get_db() -> Generator[Session, None, None]:
 
 def create_tables() -> None:
     """Create all tables on first run. Does not modify existing tables."""
+    _register_models()
     Base.metadata.create_all(bind=engine)
 
 
@@ -57,6 +63,8 @@ def run_migrations() -> None:
         # leads — CRM workflow columns (v4)
         "ALTER TABLE leads ADD COLUMN status VARCHAR(16) NOT NULL DEFAULT 'new'",
         "ALTER TABLE leads ADD COLUMN assigned_to_id INTEGER",
+        # leads — follow-up tracking (v5)
+        "ALTER TABLE leads ADD COLUMN last_contacted_at TIMESTAMP",
     ]
 
     pg_only: list[str] = [

@@ -26,7 +26,7 @@ export async function submitLead(data) {
   return body;
 }
 
-// ── Admin — helpers ───────────────────────────────────────────────────────────
+// ── Shared admin helpers ──────────────────────────────────────────────────────
 
 function authHeaders() {
   const token = tokenStore.get();
@@ -43,16 +43,23 @@ async function adminGet(path) {
   return body;
 }
 
-// ── Admin — lead endpoints ────────────────────────────────────────────────────
+// ── Leads ─────────────────────────────────────────────────────────────────────
 
-/** GET /lead/all — sorted by score DESC */
-export const fetchAllLeads = () => adminGet("/lead/all");
+/**
+ * GET /lead/all?limit=20&offset=0
+ * Returns { total, limit, offset, items }
+ */
+export function fetchAllLeads({ limit = 20, offset = 0 } = {}) {
+  return adminGet(`/lead/all?limit=${limit}&offset=${offset}`);
+}
 
-/** GET /lead/high-priority */
 export const fetchHighPriorityLeads = () => adminGet("/lead/high-priority");
+export const fetchAnalytics          = () => adminGet("/lead/analytics");
+export const fetchStaleLeads         = () => adminGet("/lead/stale");
+export const fetchQueue              = () => adminGet("/lead/queue");
 
-/** GET /lead/analytics */
-export const fetchAnalytics = () => adminGet("/lead/analytics");
+/** GET /lead/{id}/events — audit trail, newest first */
+export const fetchLeadEvents = (id) => adminGet(`/lead/${id}/events`);
 
 /**
  * PATCH /lead/{id}
@@ -70,7 +77,7 @@ export async function updateLead(id, updates) {
   return body;
 }
 
-// ── Admin — user endpoints ────────────────────────────────────────────────────
+// ── Users ─────────────────────────────────────────────────────────────────────
 
 /** GET /auth/users — list of { id, email, is_admin } */
 export const fetchUsers = () => adminGet("/auth/users");
