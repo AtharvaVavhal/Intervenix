@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Routes, Route } from "react-router-dom";
 import "./App.css";
 import Hero from "./components/Hero";
@@ -10,6 +11,13 @@ import HowItWorksPage from "./pages/HowItWorksPage";
 import CapabilitiesPage from "./pages/CapabilitiesPage";
 import DocsPage from "./pages/DocsPage";
 import ProductsPage from "./pages/ProductsPage";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import Dashboard from "./pages/Dashboard";
+import TalkToEngineerPage from "./pages/TalkToEngineerPage";
+import AdminLeadsPage from "./pages/AdminLeadsPage";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { AuthProvider } from "./context/AuthContext";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const T = {
@@ -531,7 +539,7 @@ const CTA = ({ onRequestAccess }) => (
         </Body>
         <div className="cta-row" style={{ justifyContent: "center" }}>
           <Button T={T} primary onClick={onRequestAccess}>Request Early Access</Button>
-          <Button T={T}>Talk to an Engineer</Button>
+          <Button T={T} onClick={onRequestAccess}>Talk to an Engineer</Button>
         </div>
         <p style={{
           fontFamily: T.sans, fontSize: "0.70rem",
@@ -688,22 +696,14 @@ const AccessModal = ({ onClose }) => {
 
 // ─── Landing page ─────────────────────────────────────────────────────────────
 function LandingPage() {
-  const [showAccess, setShowAccess] = useState(false);
-  const openAccess  = () => setShowAccess(true);
-  const closeAccess = () => setShowAccess(false);
+  const navigate   = useNavigate();
+  const goToIntake = () => navigate("/talk-to-engineer");
 
   return (
     <>
-      <style>{`
-        @keyframes modalFadeIn {
-          from { opacity: 0; }
-          to   { opacity: 1; }
-        }
-      `}</style>
-
       <Grain />
-      <Nav T={T} onRequestAccess={openAccess} />
-      <Hero T={T} onRequestAccess={openAccess} />
+      <Nav T={T} onRequestAccess={goToIntake} />
+      <Hero T={T} onRequestAccess={goToIntake} />
       <Divider />
       <Problem />
       <Divider />
@@ -715,10 +715,8 @@ function LandingPage() {
       <Divider />
       <Output />
       <LogoBar />
-      <CTA onRequestAccess={openAccess} />
+      <CTA onRequestAccess={goToIntake} />
       <Footer />
-
-      {showAccess && <AccessModal onClose={closeAccess} />}
     </>
   );
 }
@@ -726,12 +724,25 @@ function LandingPage() {
 // ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
   return (
-    <Routes>
-      <Route path="/"              element={<LandingPage />} />
-      <Route path="/how-it-works"  element={<HowItWorksPage />} />
-      <Route path="/capabilities"  element={<CapabilitiesPage />} />
-      <Route path="/docs"          element={<DocsPage />} />
-      <Route path="/products"      element={<ProductsPage />} />
-    </Routes>
+    <AuthProvider>
+      <Routes>
+        <Route path="/"             element={<LandingPage />} />
+        <Route path="/how-it-works" element={<HowItWorksPage />} />
+        <Route path="/capabilities" element={<CapabilitiesPage />} />
+        <Route path="/docs"         element={<DocsPage />} />
+        <Route path="/talk-to-engineer" element={<TalkToEngineerPage />} />
+        <Route path="/login"        element={<LoginPage />} />
+        <Route path="/signup"       element={<SignupPage />} />
+        <Route path="/dashboard"    element={
+          <ProtectedRoute><Dashboard /></ProtectedRoute>
+        } />
+        <Route path="/products"     element={
+          <ProtectedRoute><ProductsPage /></ProtectedRoute>
+        } />
+        <Route path="/admin/leads"  element={
+          <ProtectedRoute><AdminLeadsPage /></ProtectedRoute>
+        } />
+      </Routes>
+    </AuthProvider>
   );
 }

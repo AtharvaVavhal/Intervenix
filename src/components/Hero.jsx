@@ -197,10 +197,10 @@ export default function Hero({ T, onRequestAccess }) {
 
         {/* CTA row */}
         <div className={styles.ctaRow}>
-          <Button T={T} primary onClick={onRequestAccess} aria-label="Request early access">
-            Get Early Access
+          <Button T={T} primary onClick={onRequestAccess} aria-label="Talk to an engineer">
+            Talk to an Engineer
           </Button>
-          <Button T={T} aria-label="Watch product demo">
+          <Button T={T} aria-label="See how it works">
             See How It Works
           </Button>
         </div>

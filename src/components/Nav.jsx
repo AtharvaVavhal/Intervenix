@@ -1,18 +1,33 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Button from "./UI/Button";
+import { useAuth } from "../context/AuthContext";
 
 // Links with optional route paths. Entries without `to` stay as anchor hrefs.
-const LINKS = [
+const PUBLIC_LINKS = [
   { label: "Product",      to: "/products" },
   { label: "How It Works", to: "/how-it-works" },
   { label: "Capabilities", to: "/capabilities" },
   { label: "Docs",         to: "/docs" },
 ];
 
+const AUTH_LINKS = [
+  { label: "Dashboard",    to: "/dashboard" },
+  { label: "Product",      to: "/products" },
+  { label: "Docs",         to: "/docs" },
+];
+
 export default function Nav({ T, onRequestAccess }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const { isAuthenticated, logout } = useAuth();
+  const navigate     = useNavigate();
+  const ACTIVE_LINKS = isAuthenticated ? AUTH_LINKS : PUBLIC_LINKS;
+
+  function handleLogout() {
+    logout();
+    navigate("/login");
+  }
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 32);
@@ -63,7 +78,7 @@ export default function Nav({ T, onRequestAccess }) {
           justifyContent: "center",
           gap: "0.25rem",
         }}>
-          {LINKS.map((l) => <NavLink key={l.label} to={l.to}>{l.label}</NavLink>)}
+          {ACTIVE_LINKS.map((l) => <NavLink key={l.label} to={l.to}>{l.label}</NavLink>)}
         </div>
 
         {/* Desktop CTAs */}
@@ -73,8 +88,14 @@ export default function Nav({ T, onRequestAccess }) {
           alignItems: "center",
           gap: "0.5rem",
         }}>
-          <Button T={T} ghost small>Sign in</Button>
-          <Button T={T} primary small onClick={onRequestAccess}>Request Access</Button>
+          {isAuthenticated ? (
+            <Button T={T} ghost small onClick={handleLogout}>Log out</Button>
+          ) : (
+            <>
+              <Button T={T} ghost small onClick={() => navigate("/login")}>Sign in</Button>
+              <Button T={T} primary small onClick={() => navigate("/talk-to-engineer")}>Talk to Engineer</Button>
+            </>
+          )}
         </div>
 
         {/* Hamburger */}
@@ -132,7 +153,7 @@ export default function Nav({ T, onRequestAccess }) {
         transform: open ? "translateY(0)" : "translateY(-12px)",
         pointerEvents: open ? "auto" : "none",
       }}>
-        {LINKS.map((l, i) => {
+        {ACTIVE_LINKS.map((l, i) => {
           const Tag = l.to ? Link : "a";
           const tagProps = l.to
             ? { to: l.to }
@@ -168,10 +189,20 @@ export default function Nav({ T, onRequestAccess }) {
           transition: "opacity 0.3s ease 0.2s",
           opacity: open ? 1 : 0,
         }}>
-          <Button T={T} ghost>Sign in</Button>
-          <Button T={T} primary onClick={() => { setOpen(false); onRequestAccess(); }}>
-            Request Access
-          </Button>
+          {isAuthenticated ? (
+            <Button T={T} ghost onClick={() => { setOpen(false); handleLogout(); }}>
+              Log out
+            </Button>
+          ) : (
+            <>
+              <Button T={T} ghost onClick={() => { setOpen(false); navigate("/login"); }}>
+                Sign in
+              </Button>
+              <Button T={T} primary onClick={() => { setOpen(false); navigate("/talk-to-engineer"); }}>
+                Talk to Engineer
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
