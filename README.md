@@ -15,7 +15,7 @@ Intervenix converts delinquency prediction into economically justified intervent
 5. [Backend Design](#5-backend-design)
 6. [Frontend Design](#6-frontend-design)
 7. [How to Run the Project](#7-how-to-run-the-project)
-8. [Results and Insights](#8-results-and-insights)
+8. [Results and Insights](#8-results-and-insights)--
 9. [Limitations](#9-limitations)
 10. [Future Improvements](#10-future-improvements)
 11. [Resume Description](#11-resume-description)
